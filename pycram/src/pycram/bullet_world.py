@@ -81,9 +81,15 @@ class BulletWorld:
         self._gui_thread.join()
 
     def save_state(self):
+        """
+        Returns the id of the saved state of the BulletWorld
+        """
         return p.saveState(self.client_id)
 
     def restore_state(self, state):
+        """
+        Restores the state of the BulletWorld according to the given state id
+        """
         p.restoreState(state, physicsClientId=self.client_id)
 
     def copy(self):
