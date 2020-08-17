@@ -80,6 +80,12 @@ class BulletWorld:
         p.disconnect(self.client_id)
         self._gui_thread.join()
 
+    def save_state(self):
+        return p.saveState(self.client_id)
+
+    def restore_state(self, state):
+        p.restoreState(state, physicsClientId=self.client_id)
+
     def copy(self):
         """
         Copies this Bullet World into another and returns it. The other BulletWorld
@@ -171,7 +177,7 @@ class Object:
         link_T_object = self._calculate_transform(object, link)
         self.attachments[object] = [link_T_object, link, loose]
         object.attachments[self] = [p.invertTransform(link_T_object[0], link_T_object[1]), None, False]
-        
+
         cid = p.createConstraint(self.id, link_id, object.id, -1, p.JOINT_FIXED,
                             [0, 1, 0], link_T_object[0], [0, 0, 0], link_T_object[1], physicsClientId=self.world.client_id)
         self.cids[object] = cid
