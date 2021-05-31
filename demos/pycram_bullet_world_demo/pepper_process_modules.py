@@ -273,14 +273,16 @@ class PepperRealNavigation(ProcessModule):
             client.wait_for_results()
 
 
+PepperProcessModulesSimulated = {'moving' : PepperNavigation(),
+                              'pick-up' : PepperPickUp(),
+                              'place' : PepperPlace(),
+                              'accessing' : PepperAccessing(),
+                              'looking' : PepperMoveHead(),
+                              'opening_gripper' : PepperMoveGripper(),
+                              'closing_gripper' : PepperMoveGripper(),
+                              'detecting' : PepperDetecting(),
+                              'move-tcp' : PepperMoveTCP(),
+                              'move-arm-joints' : PepperMoveJoints(),
+                              'world-state-detecting' : PepperWorldStateDetecting()}
 
-class PepperProcessModules(ProcessModules):
-    initialized = None
-
-    # Registration of the ProcessModulessw
-    def __init__(self):
-        if not PepperProcessModules.initialized:
-            super().__init__(PepperNavigation(), PepperPickUp(), PepperPlace(), PepperAccessing(), PepperParkArms(), PepperMoveHead(),
-                             PepperMoveGripper(), PepperMoveGripper(), PepperDetecting(), PepperMoveTCP(), PepperMoveJoints(),
-                             PepperWorldStateDetecting())
-            PepperProcessModules.initialized = self
+PepperProcessModulesReal = {'moving': PepperRealNavigation()}

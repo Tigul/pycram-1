@@ -4,6 +4,7 @@ from .pr2_process_modules import PR2ProcessModulesSimulated, PR2ProcessModulesRe
 from .boxy_process_modules import BoxyProcessModulesSimulated, BoxyProcessModulesReal
 from .donbot_process_modules import DonbotProcessModulesSimulated, DonbotProcessModulesReal
 from .hsr_process_modules import HSRProcessModulesSimulated, HSRProcessModulesReal
+from .pepper_process_modules import PepperProcessModulesSimulated, PepperProcessModulesSimulated
 from rospy import logerr
 
 
@@ -50,6 +51,16 @@ def available_process_modules(desig):
             return HSRProcessModulesSimulated[type]
         elif robot_type == 'real':
             return HSRProcessModulesReal[type]
+        elif robot_type == "":
+            logerr(f"No robot_type is set, did you use the with_simulated_robot or with_real_robot decorator?")
+        else:
+            logerr(f"No Process Module could be found for robot {robot_name}")
+
+    if robot_name == 'pepper':
+        if robot_type == 'simulated':
+            return PepperProcessModulesSimulated[type]
+        elif robot_type == 'real':
+            return PepperProcessModulesReal[type]
         elif robot_type == "":
             logerr(f"No robot_type is set, did you use the with_simulated_robot or with_real_robot decorator?")
         else:
