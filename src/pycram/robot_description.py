@@ -811,7 +811,7 @@ def update_robot_description(robot_name=None, from_ros=None):
         except ConnectionRefusedError:
             logerr("(robot-description) Could not get robot name from parameter server. Try again.")
             return None
-        res = re.findall(r"robot\ *name\ *=\ *\"\ *[a-zA-Z_1-9]*\ *\"", urdf)
+        res = re.findall(r"robot\ *name\ *=\ *\"\ *[a-zA-Z_0-9]*\ *\"", urdf)
         if len(res) == 1:
             begin = res[0].find("\"")
             end = res[0][begin + 1:].find("\"")
@@ -819,6 +819,7 @@ def update_robot_description(robot_name=None, from_ros=None):
     else:
         return None
 
+    print(robot)
     # Choose Description based on robot name
     if 'donbot' in robot:
         description = DonbotDescription
@@ -829,6 +830,8 @@ def update_robot_description(robot_name=None, from_ros=None):
     elif 'hsr' in robot:
         description = HSRDescription
     elif 'pepper' in robot:
+        description = PepperDescription
+    elif 'juliettey20mp' in robot:
         description = PepperDescription
     else:
         logerr("(robot-description) The given robot name %s has no description class.", robot_name)

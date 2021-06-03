@@ -4,7 +4,7 @@ from .pr2_process_modules import PR2ProcessModulesSimulated, PR2ProcessModulesRe
 from .boxy_process_modules import BoxyProcessModulesSimulated, BoxyProcessModulesReal
 from .donbot_process_modules import DonbotProcessModulesSimulated, DonbotProcessModulesReal
 from .hsr_process_modules import HSRProcessModulesSimulated, HSRProcessModulesReal
-from .pepper_process_modules import PepperProcessModulesSimulated, PepperProcessModulesSimulated
+from .pepper_process_modules import PepperProcessModulesSimulated, PepperProcessModulesReal
 from rospy import logerr
 
 

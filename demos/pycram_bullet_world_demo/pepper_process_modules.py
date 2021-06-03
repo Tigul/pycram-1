@@ -1,14 +1,13 @@
 from pycram.robot_description import InitializedRobotDescription as robot_description
 from pycram.process_module import ProcessModule
-from pycram.process_modules import ProcessModules
 from pycram.bullet_world import BulletWorld
 from pycram.helper import transform
 from pycram.ik import request_ik
 from pycram.helper import _transform_to_torso, _apply_ik, make_pose_stamped_msg, list2pose
 from pycram.local_transformer import local_transformer
-from move_base_msgs.msg import MoveBaseActionGoal, MoveBaseGoal
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import Header
-from actionlib_msgs.msg import GoalID
+from actionlib_msgs.msg import GoalID, GoalStatus
 import rospy
 import actionlib
 import pycram.bullet_world_reasoning as btr
@@ -261,16 +260,29 @@ class PepperWorldStateDetecting(ProcessModule):
 
 class PepperRealNavigation(ProcessModule):
     def _execute(self, desig):
+        def active_callback():
+            rospy.loginfo("Start Navigating")
+        def feedback_callback(msg):
+            pass
+        def done_callback(state, result):
+            for k in GoalStatus.__dict__.keys():
+                if state == GoalStatus.__dict__[k]:
+                    rospy.loginfo(f"Navigation has Finished with the result: {k}")
+        solution = desig.reference()
         if solution['cmd'] == 'navigate':
-            pose =list2pose(solution['target'], solution['orientation'])
-            head = Header(0, rospy.get_rostime(), 'map')
-            goal = MoveBaseGoal(head, pose)
-            id = GoalID(rospy.get_rostime(), 'nav')
-            action_goal = MoveBaseActionGoal(head, id, goal)
-            client = actionlib.SimpleActionClient('move_base/goal', MoveBaseActionGoal)
+            goal = MoveBaseGoal()
+            pose = list2pose([solution['target'], solution['orientation']])
+            goal.target_pose.pose = pose
+            #goal.target_pose.pose.orientation.w = 1
+            #goal.target_pose.pose.position.x = 1
+            #goal.target_pose.pose.position.y = 1
+            goal.target_pose.header.frame_id = "map"
+            client = actionlib.SimpleActionClient('move_base', MoveBaseAction)
+            rospy.loginfo("Waiting for action server")
             client.wait_for_server()
-            client.send_goal(action_goal)
-            client.wait_for_results()
+            client.send_goal(goal,active_cb=active_callback, done_cb=done_callback, feedback_cb=feedback_callback)
+            wait = client.wait_for_result()
+
 
 
 PepperProcessModulesSimulated = {'moving' : PepperNavigation(),
