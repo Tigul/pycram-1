@@ -19,9 +19,11 @@
               textfile="$(find pycram)/resources/boxy.urdf"/>
   </group>
 
+
   <group if="$(eval robot == 'pepper')">
     <param textfile="$(find pycram)/resources/pepper.urdf" name="robot_description"/>
   </group>
+
 
 
 <!--
