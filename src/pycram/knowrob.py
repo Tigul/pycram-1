@@ -24,4 +24,10 @@ def get_all_shelves():
 
 def find_shelf_pose(shelf):
     prolog = Prolog()
-    return prolog.once(f"get_pose_in_desired_reference_frame('{shelf}', 'map', T, R)")
+    pose = prolog.once(f"get_pose_in_desired_reference_frame('{shelf}', 'map', T, R)")
+    return [pose['T'], pose['R']]
+
+def get_pose_for_item(product_type, item):
+     prolog = Prolog()
+     query = prolog.once(f"get_product_pose({product_type}, {item}, Shelf, Layer, Facing)")
+     return find_shelf_pose(query['Shelf'])
