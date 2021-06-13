@@ -3,6 +3,8 @@ from knowrob_refills.knowrob_wrapper import KnowRob
 from rosprolog_client import Prolog, PrologException
 import rospy
 
+prolog = Prolog()
+
 def startup_knowrob():
     db = '~/workspace/whole_store_filled_neem/roslog'
     knowrob = KnowRob(initial_mongo_db=db,
@@ -19,15 +21,17 @@ def startup_knowrob():
     return knowrob
 
 def get_all_shelves():
-    prolog = Prolog()
+    #prolog = Prolog()
     return prolog.once("get_all_shelves(A)")['A']
 
 def find_shelf_pose(shelf):
-    prolog = Prolog()
+    #prolog = Prolog()
     pose = prolog.once(f"get_pose_in_desired_reference_frame('{shelf}', 'map', T, R)")
     return [pose['T'], pose['R']]
 
-def get_pose_for_item(product_type, item):
-     prolog = Prolog()
-     query = prolog.once(f"get_product_pose({product_type}, {item}, Shelf, Layer, Facing)")
-     return find_shelf_pose(query['Shelf'])
+def get_pose_for_product_type(product_type):
+    #prolog = Prolog()
+    query =  prolog.once(f"get_product_location('{product_type}', Item, Shelf, Layer, Facing)")
+    item = query['Item']
+    item_pose = prolog.once(f"get_pose_in_desired_reference_frame('{item}', 'map', T, R)")
+    return [item_pose['T'], item_pose['R']]

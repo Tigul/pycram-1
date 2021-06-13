@@ -819,7 +819,6 @@ def update_robot_description(robot_name=None, from_ros=None):
     else:
         return None
 
-    print(robot)
     # Choose Description based on robot name
     if 'donbot' in robot:
         description = DonbotDescription

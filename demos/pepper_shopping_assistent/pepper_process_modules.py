@@ -46,83 +46,6 @@ class PepperNavigation(ProcessModule):
             local_transformer.update_from_btr()
 
 
-class PepperPickUp(ProcessModule):
-    """
-    This process module is for picking up a given object.
-    The object has to be reachable for this process module to succeed.
-    """
-
-    def _execute(self, desig):
-        solution = desig.reference()
-        if solution['cmd'] == 'pick':
-            object = solution['object']
-            robot = BulletWorld.robot
-            target = object.get_position_and_orientation()
-            target = _transform_to_torso(target, robot)
-            arm = "left" if solution['gripper'] == robot_description.i.get_tool_frame("left") else "right"
-            joints = robot_description.i._safely_access_chains(arm).joints
-            #tip = "r_wrist_roll_link" if solution['gripper'] == "r_gripper_tool_frame" else "l_wrist_roll_link"
-            inv = request_ik(robot_description.i.base_frame, solution['gripper'], target, robot, joints)
-            _apply_ik(robot, inv, solution['gripper'])
-            robot.attach(object, solution['gripper'])
-            time.sleep(0.5)
-
-
-class PepperPlace(ProcessModule):
-    """
-    This process module places an object at the given position in world coordinate frame.
-    """
-
-    def _execute(self, desig):
-        solution = desig.reference()
-        if solution['cmd'] == 'place':
-            object = solution['object']
-            robot = BulletWorld.robot
-            target = [solution['target'], [0, 0, 0, 1]]
-            target = _transform_to_torso(target, robot)
-            target = (target[0], [0, 0, 0, 1])
-            arm = "left" if solution['gripper'] == robot_description.i.get_tool_frame("left") else "right"
-            joints = robot_description.i._safely_access_chains(arm).joints
-            #inv = p.calculateInverseKinematics(robot.id, robot.get_link_id(solution['gripper']), solution['target'],
-            #                               maxNumIterations=100)
-            #tip = "r_wrist_roll_link" if solution['gripper'] == "r_gripper_tool_frame" else "l_wrist_roll_link"
-            inv = request_ik(robot_description.i.base_frame, solution['gripper'], target, robot, joints)
-            _apply_ik(robot, inv, solution['gripper'])
-            robot.detach(object)
-            time.sleep(0.5)
-
-
-class PepperAccessing(ProcessModule):
-    """
-    This process module responsible for opening drawers to access the objects inside. This works by firstly moving
-    the end effector to the handle of the drawer. Next, the end effector is moved the respective distance to the back.
-    This provides the illusion the robot would open the drawer by himself.
-    Then the drawer will be opened by setting the joint pose of the drawer joint.
-    """
-
-    def _execute(self, desig):
-        solution = desig.reference()
-        if solution['cmd'] == 'access':
-            kitchen = solution['part-of']
-            robot = BulletWorld.robot
-            gripper = solution['gripper']
-            drawer_handle = solution['drawer-handle']
-            drawer_joint = solution['drawer-joint']
-            dis = solution['distance']
-            arm = "left" if solution['gripper'] == robot_description.i.get_tool_frame("left") else "right"
-            joints = robot_description.i._safely_access_chains(arm).joints
-            #inv = p.calculateInverseKinematics(robot.id, robot.get_link_id(gripper), kitchen.get_link_position(drawer_handle))
-            target = _transform_to_torso(kitchen.get_link_position_and_orientation(drawer_handle), robot)
-            target = (target[0], [0, 0, 0, 1])
-            inv = request_ik(robot_description.i.base_frame, gripper, target , robot, joints )
-            _apply_ik(robot, inv, gripper)
-            time.sleep(0.2)
-            new_p = ([target[0][0] - dis, target[0][1], target[0][2]],target[1])
-            #inv = p.calculateInverseKinematics(robot.id, robot.get_link_id(gripper), new_p)
-            inv = request_ik(robot_description.i.base_frame, gripper, new_p, robot, joints)
-            _apply_ik(robot, inv, gripper)
-            kitchen.set_joint_state(drawer_joint, dis)
-            time.sleep(0.5)
 
 
 class PepperParkArms(ProcessModule):
@@ -181,26 +104,6 @@ class PepperMoveGripper(ProcessModule):
             time.sleep(0.5)
 
 
-class PepperDetecting(ProcessModule):
-    """
-    This process module tries to detect an object with the given type. To be detected the object has to be in
-    the field of view of the robot.
-    """
-
-    def _execute(self, desig):
-        solution = desig.reference()
-        if solution['cmd'] == "detecting":
-            robot = BulletWorld.robot
-            object_type = solution['object']
-            cam_frame_name = solution['cam_frame']
-            front_facing_axis = solution['front_facing_axis']
-
-            objects = BulletWorld.current_bullet_world.get_objects_by_type(object_type)
-            for obj in objects:
-                if btr.visible(obj, robot.get_link_position_and_orientation(cam_frame_name), front_facing_axis):
-                    return obj
-
-
 class PepperMoveTCP(ProcessModule):
     """
     This process moves the tool center point of either the right or the left arm.
@@ -227,21 +130,33 @@ class PepperMoveJoints(ProcessModule):
 
     def _execute(self, desig):
         solution = desig.reference()
+        print("PM")
         if solution['cmd'] == "move-joints":
             robot = BulletWorld.robot
-            right_arm_poses = solution['right-poses']
-            left_arm_poses = solution['left-poses']
+            right_arm_poses = solution['right_arm_poses']
+            left_arm_poses = solution['left_arm_poses']
+            print(left_arm_poses)
             if type(right_arm_poses) == dict:
                 for joint, pose in right_arm_poses.items():
                     robot.set_joint_state(joint, pose)
             elif type(right_arm_poses) == str and right_arm_poses == "park":
                 _park_arms("right")
+            elif type(right_arm_poses) == str and right_arm_poses == "point":
+                for joint, value in robot_description.i.get_static_joint_chain('right', 'point').items():
+                    robot.set_joint_state(joint, value)
+                for i in range(1, 4):
+                    robot.set_joint_state('RFinger1' + str(i), 1)
 
             if type(left_arm_poses) == dict:
                 for joint, pose in left_arm_poses.items():
                     robot.set_joint_state(joint, pose)
-            elif type(right_arm_poses) == str and left_arm_poses == "park":
+            elif type(left_arm_poses) == str and left_arm_poses == "park":
                 _park_arms("left")
+            elif type(left_arm_poses) == str and left_arm_poses == "point":
+                for joint, value in robot_description.i.get_static_joint_chain('left', 'point').items():
+                    robot.set_joint_state(joint, value)
+                for i in range(1, 4):
+                    robot.set_joint_state('LFinger1' + str(i), 1)
 
             time.sleep(0.5)
 
@@ -285,16 +200,29 @@ class PepperRealNavigation(ProcessModule):
 
 
 
-PepperProcessModulesSimulated = {'moving' : PepperNavigation(),
-                              'pick-up' : PepperPickUp(),
-                              'place' : PepperPlace(),
-                              'accessing' : PepperAccessing(),
+PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),
                               'looking' : PepperMoveHead(),
                               'opening_gripper' : PepperMoveGripper(),
                               'closing_gripper' : PepperMoveGripper(),
-                              'detecting' : PepperDetecting(),
                               'move-tcp' : PepperMoveTCP(),
-                              'move-arm-joints' : PepperMoveJoints(),
+                              'move-joints' : PepperMoveJoints(),
                               'world-state-detecting' : PepperWorldStateDetecting()}
 
-PepperProcessModulesReal = {'moving': PepperRealNavigation()}
+PepperProcessModulesReal = {'navigate': PepperRealNavigation()}
+
+def available_process_modules(desig):
+    robot_name = robot_description.i.name
+    robot_type = ProcessModule.robot_type
+    type = desig.prop_value('cmd')
+
+    if robot_name == 'pepper':
+        if robot_type == 'simulated':
+            return PepperProcessModulesSimulated[type]
+        elif robot_type == 'real':
+            return PepperProcessModulesReal[type]
+        elif robot_type == "":
+            rospy.logerr(f"No robot_type is set, did you use the with_simulated_robot or with_real_robot decorator?")
+        else:
+            rospy.logerr(f"No Process Module could be found for robot {robot_name}")
+
+ProcessModule.resolvers.append(available_process_modules)
