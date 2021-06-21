@@ -8,6 +8,12 @@ from pycram.local_transformer import local_transformer
 from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import Header
 from actionlib_msgs.msg import GoalID, GoalStatus
+from std_msgs.msg import String
+from moveit_commander.conversions import pose_to_list
+import sys
+import moveit_commander
+import moveit_msgs.msg
+import geometry_msgs.msg
 import rospy
 import actionlib
 import pycram.bullet_world_reasoning as btr
@@ -130,12 +136,10 @@ class PepperMoveJoints(ProcessModule):
 
     def _execute(self, desig):
         solution = desig.reference()
-        print("PM")
         if solution['cmd'] == "move-joints":
             robot = BulletWorld.robot
             right_arm_poses = solution['right_arm_poses']
             left_arm_poses = solution['left_arm_poses']
-            print(left_arm_poses)
             if type(right_arm_poses) == dict:
                 for joint, pose in right_arm_poses.items():
                     robot.set_joint_state(joint, pose)
@@ -198,6 +202,38 @@ class PepperRealNavigation(ProcessModule):
             client.send_goal(goal,active_cb=active_callback, done_cb=done_callback, feedback_cb=feedback_callback)
             wait = client.wait_for_result()
 
+class PepperRealMoveJoints(ProcessModule):
+    def _execute(self, desig):
+        solution = desig.reference()
+        if solution['cmd'] == 'move-joints':
+            moveit_commander.roscpp_initialize(sys.argv)
+            robot = moveit_commander.RobotCommander()
+            scene = moveit_commander.PlanningSceneInterface()
+
+            right_arm_poses = solution['right_arm_poses']
+            left_arm_poses = solution['left_arm_poses']
+            if type(right_arm_poses) == dict:
+                move_group = moveit_commander.MoveGroupCommander('right_arm')
+                joint_goal = right_arm_poses.values()
+                move_group.go(joint_goal, wait=True)
+                move_group.stop()
+            elif type(right_arm_poses) == str:
+                move_group = moveit_commander.MoveGroupCommander('right_arm')
+                joint_goal = list(robot_description.i.get_static_joint_chain('right', right_arm_poses).values())
+                move_group.go(joint_goal, wait=True)
+                move_group.stop()
+
+            if type(left_arm_poses) == dict:
+                move_group = moveit_commander.MoveGroupCommander('left_arm')
+                joint_goal = left_arm_poses.values()
+                move_group.go(joint_goal, wait=True)
+                move_group.stop()
+            elif type(left_arm_poses) == str:
+                move_group = moveit_commander.MoveGroupCommander('left_arm')
+                joint_goal = list(robot_description.i.get_static_joint_chain('left', left_arm_poses).values())
+                move_group.go(joint_goal, wait=True)
+                move_group.stop()
+
 
 
 PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),
@@ -208,7 +244,8 @@ PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),
                               'move-joints' : PepperMoveJoints(),
                               'world-state-detecting' : PepperWorldStateDetecting()}
 
-PepperProcessModulesReal = {'navigate': PepperRealNavigation()}
+PepperProcessModulesReal = {'navigate': PepperRealNavigation(),
+                            'move-joints': PepperRealMoveJoints()}
 
 def available_process_modules(desig):
     robot_name = robot_description.i.name
