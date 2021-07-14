@@ -21,6 +21,7 @@ def assistant(product_type):
     item_pose = get_pose_for_product_type(product_type)
     robot_pose = tf_listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
     route = navigation(item_pose[0], robot_pose[0])
+    #route = navigation([-0.1, -3.2, 0], [0, 0, -0.70, 0.70])
     for pose, orientation in route:
         robot_pose = tf_listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
         angle_to_goal = np.arctan2(pose[1] - robot_pose[0][1], pose[0] - robot_pose[0][0])
@@ -40,4 +41,6 @@ def simple_assistant():
         print(pose)
         print(orientation)
         MotionDesignator(MoveMotionDescription(target=pose, orientation=orientation)).perform()
-assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
+
+print(get_pose_for_product_type('http://knowrob.org/kb/shop.owl#FruitOrCereal'))
+#assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')

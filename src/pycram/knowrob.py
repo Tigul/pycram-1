@@ -30,8 +30,9 @@ def find_shelf_pose(shelf):
     return [pose['T'], pose['R']]
 
 def get_pose_for_product_type(product_type):
-    #prolog = Prolog()
-    query =  prolog.once(f"get_product_location('{product_type}', Item, Shelf, Layer, Facing)")
+    query = prolog.once(f"subclass_of(Product, '{product_type}'), has_type(Item, Product).")
+    #query = prolog.once(f"get_product_location('{product_type}', Item, Shelf, Layer, Facing)")
+
     item = query['Item']
     item_pose = prolog.once(f"get_pose_in_desired_reference_frame('{item}', 'map', T, R)")
     return [item_pose['T'], item_pose['R']]
