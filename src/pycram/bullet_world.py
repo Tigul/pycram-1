@@ -186,7 +186,7 @@ class Object:
     This class represents an object in the BulletWorld.
     """
 
-    def __init__(self, name, type, path, position=[0, 0, 0], orientation=[0, 0, 0, 1], world=None, color=[1, 1, 1, 1], ignoreCachedFiles=False):
+    def __init__(self, name, type, path, position=[0, 0, 0], orientation=[0, 0, 0, 1], world=None, color=[1, 1, 1, 1], ignoreCachedFiles=False, fixed_base=0):
         """
         The constructor loads the urdf file into the given BulletWorld, if no BulletWorld is specified the
         'current_bullet_world' will be used. It is also possible to load .obj and .stl file into the BulletWorld.
@@ -205,7 +205,7 @@ class Object:
         self.type = type
         self.path = path
         self.color = color
-        self.id = _load_object(name, path, position, orientation, world, color, ignoreCachedFiles)
+        self.id = _load_object(name, path, position, orientation, world, color, ignoreCachedFiles, fixed_base)
         self.joints = self._joint_or_link_name_to_id("joint")
         self.links = self._joint_or_link_name_to_id("link")
         self.attachments = {}
@@ -408,7 +408,7 @@ class Object:
 def filter_contact_points(contact_points, exclude_ids):
     return list(filter(lambda cp: cp[2] not in exclude_ids, contact_points))
 
-def _load_object(name, path, position, orientation, world, color, ignoreCachedFiles):
+def _load_object(name, path, position, orientation, world, color, ignoreCachedFiles, fixed_base):
     """
     This method loads an object to the given BulletWorld with the given position and orientation. The color will only be
     used when an .obj or .stl file is given.
@@ -457,7 +457,7 @@ def _load_object(name, path, position, orientation, world, color, ignoreCachedFi
         path = cach_dir + name + ".urdf"
 
     try:
-        obj = p.loadURDF(path, basePosition=position, baseOrientation=orientation, physicsClientId=world_id)
+        obj = p.loadURDF(path, basePosition=position, baseOrientation=orientation, physicsClientId=world_id, useFixedBase=fixed_base)
         return obj
     except p.error as e:
         print(e)

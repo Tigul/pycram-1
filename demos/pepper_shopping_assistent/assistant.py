@@ -2,6 +2,7 @@ from pycram.knowrob import get_pose_for_product_type
 from pycram.process_module import with_real_robot
 from pycram.motion_designator import *
 from navigation import navigation
+from std_msgs.msg import String
 import numpy as np
 import pepper_process_modules
 import action_desig_grounding
@@ -10,8 +11,12 @@ import rospy
 import tf
 import time
 
-#node = rospy.init_node("assistant")
+node = rospy.init_node("assistant")
+rospy.Subscriber('/assistant', String, app_callback)
+rospy.spin()
 # http://knowrob.org/kb/shop.owl#FruitOrCereal
+
+type_to_knowrob = {}
 
 @with_real_robot
 def assistant(product_type):
@@ -42,5 +47,9 @@ def simple_assistant():
         print(orientation)
         MotionDesignator(MoveMotionDescription(target=pose, orientation=orientation)).perform()
 
-print(get_pose_for_product_type('http://knowrob.org/kb/shop.owl#FruitOrCereal'))
+#print(get_pose_for_product_type('http://knowrob.org/kb/shop.owl#FruitOrCereal'))
 #assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
+
+def app_callback(msg):
+    knowrob_type = type_to_knowrob[msg.data]
+    assistant(knowrob_type)
