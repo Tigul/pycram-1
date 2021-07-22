@@ -11,9 +11,9 @@ import rospy
 import tf
 import time
 
-node = rospy.init_node("assistant")
-rospy.Subscriber('/assistant', String, app_callback)
-rospy.spin()
+#node = rospy.init_node("assistant")
+#rospy.Subscriber('/assistant', String, app_callback)
+#rospy.spin()
 # http://knowrob.org/kb/shop.owl#FruitOrCereal
 
 type_to_knowrob = {}
@@ -48,7 +48,7 @@ def simple_assistant():
         MotionDesignator(MoveMotionDescription(target=pose, orientation=orientation)).perform()
 
 #print(get_pose_for_product_type('http://knowrob.org/kb/shop.owl#FruitOrCereal'))
-#assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
+assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
 
 def app_callback(msg):
     knowrob_type = type_to_knowrob[msg.data]
