@@ -235,7 +235,6 @@ class PepperRealMoveJoints(ProcessModule):
                 move_group.stop()
 
 
-
 PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),
                               'looking' : PepperMoveHead(),
                               'opening_gripper' : PepperMoveGripper(),

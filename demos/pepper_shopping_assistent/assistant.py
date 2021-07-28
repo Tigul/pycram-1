@@ -1,6 +1,7 @@
 from pycram.knowrob import get_pose_for_product_type
 from pycram.process_module import with_real_robot
 from pycram.motion_designator import *
+from pycram.ik import request_ik
 from navigation import navigation
 from std_msgs.msg import String
 import numpy as np
@@ -48,8 +49,41 @@ def simple_assistant():
         MotionDesignator(MoveMotionDescription(target=pose, orientation=orientation)).perform()
 
 #print(get_pose_for_product_type('http://knowrob.org/kb/shop.owl#FruitOrCereal'))
-assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
+#assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
 
 def app_callback(msg):
     knowrob_type = type_to_knowrob[msg.data]
     assistant(knowrob_type)
+
+def point_to(robot, arm, goal):
+    shoulder_link "RShoulder" if arm == "right" else "LShoulder"
+    hand_link = "RHand" if arm == "right" else "LHand"
+    ee_goal = _calculate_ee_pose(robot.get_link_position(shoulder_link), goal)
+
+    arm_joints = robot_description.i._safetly_access_chains(arm).joints
+    ik = request_ik(shoulder_link, hand_link, [ee_goal, [0, 0, 0, 1]], robot, arm_joints)
+
+    values = {}
+    for joint, value in zip(arm_joints, ik):
+        values[joint] = value
+
+    description = MoveArmJointsMotionDescription()
+    description.__dict__[arm+'_arm_poses'] = values
+
+    MotionDesignator(describtion).perform()
+
+
+
+
+def _calculate_ee_pose(shoulder_pose, goal_pose):
+    shoulder_pose = np.array(shoulder_pose)
+    goal_pose = np.array(goal_pose)
+
+    # Vector from the shoulder to the goal
+    direction_vector = goal_pose - shoulder_pose
+    dir_length = np.linalg.norm(direction_vector)
+    # Short vector has rigt direction and length
+    short_vector = (0.5 / dir_length)*direction_vector
+
+    vector_in_map = shoulder_pose + short_vector
+    return list(vector_in_map)
