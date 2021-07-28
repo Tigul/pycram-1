@@ -25,7 +25,7 @@ def _get_position_for_joints(robot, joints):
     return list(map(lambda x: p.getJointState(robot.id, robot.get_joint_id(x))[0], joints))
 
 
-def _make_request_msg(root_link, tip_link, target_pose, robot_object, joints):
+def _make_request_msg(root_link, tip_link, target_pose, joints):
     """
     This method generates an ik request message for the kdl_ik_service. The message is
      of the type moveit_msgs/PositionIKRequest and contains all information
@@ -58,7 +58,7 @@ def _make_request_msg(root_link, tip_link, target_pose, robot_object, joints):
     robot_state = RobotState()
     joint_state = JointState()
     joint_state.name = joints
-    joint_state.position = _get_position_for_joints(robot_object, joints)
+    #joint_state.position = _get_position_for_joints(robot_object, joints)
     joint_state.velocity = [0.0 for x in range(len(joints))]
     joint_state.effort = [0.0 for x in range(len(joints))]
     robot_state.joint_state = joint_state
@@ -74,7 +74,7 @@ def _make_request_msg(root_link, tip_link, target_pose, robot_object, joints):
 
     return msg_request
 
-def request_ik(root_link, tip_link, target_pose_and_rotation, robot_object, joints):
+def request_ik(root_link, tip_link, target_pose_and_rotation, joints):
     """
     This method sends a request to the kdl_ik_service and returns the solution.
     Note that the robot in robot_object should be identical to the robot description
@@ -92,7 +92,7 @@ def request_ik(root_link, tip_link, target_pose_and_rotation, robot_object, join
     """
     rospy.wait_for_service('/kdl_ik_service/get_ik')
 
-    req = _make_request_msg(root_link, tip_link, target_pose_and_rotation, robot_object, joints)
+    req = _make_request_msg(root_link, tip_link, target_pose_and_rotation, joints)
     ik = rospy.ServiceProxy('/kdl_ik_service/get_ik', GetPositionIK)
     resp = ik(req)
     if resp.error_code.val == -31:

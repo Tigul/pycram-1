@@ -1,9 +1,10 @@
 from pycram.knowrob import get_pose_for_product_type
-from pycram.process_module import with_real_robot
+from pycram.process_module import with_real_robot, real_robot
 from pycram.motion_designator import *
 from pycram.ik import request_ik
 from navigation import navigation
 from std_msgs.msg import String
+from pycram.robot_description import InitializedRobotDescription as robot_description
 import numpy as np
 import pepper_process_modules
 import action_desig_grounding
@@ -55,13 +56,21 @@ def app_callback(msg):
     knowrob_type = type_to_knowrob[msg.data]
     assistant(knowrob_type)
 
-def point_to(robot, arm, goal):
-    shoulder_link "RShoulder" if arm == "right" else "LShoulder"
+def point_to(arm, goal):
+    shoulder_link = "RShoulder" if arm == "right" else "LShoulder"
     hand_link = "RHand" if arm == "right" else "LHand"
-    ee_goal = _calculate_ee_pose(robot.get_link_position(shoulder_link), goal)
+    tf_listener = tf.TransformListener()
+    time.sleep(2)
 
-    arm_joints = robot_description.i._safetly_access_chains(arm).joints
-    ik = request_ik(shoulder_link, hand_link, [ee_goal, [0, 0, 0, 1]], robot, arm_joints)
+    shoulder_pose = tf_listener.lookupTransform('/map', shoulder_link, rospy.Time(0))
+    print(f"tf shoulder: {shoulder_pose}")
+    foot_print_pose = tf_listener.lookupTransform('/base_footprint', shoulder_link, rospy.Time(0))
+
+    ee_goal = _calculate_ee_pose(shoulder_pose[0], goal)
+    ee_goal_in_footprint = list(np.array(foot_print_pose[0]) + ee_goal)
+
+    arm_joints = robot_description.i._safely_access_chains(arm).joints
+    ik = request_ik(shoulder_link, hand_link, [ee_goal_in_footprint, [0, 0, 0, 1]], arm_joints)
 
     values = {}
     for joint, value in zip(arm_joints, ik):
@@ -73,8 +82,6 @@ def point_to(robot, arm, goal):
     MotionDesignator(describtion).perform()
 
 
-
-
 def _calculate_ee_pose(shoulder_pose, goal_pose):
     shoulder_pose = np.array(shoulder_pose)
     goal_pose = np.array(goal_pose)
@@ -83,7 +90,15 @@ def _calculate_ee_pose(shoulder_pose, goal_pose):
     direction_vector = goal_pose - shoulder_pose
     dir_length = np.linalg.norm(direction_vector)
     # Short vector has rigt direction and length
-    short_vector = (0.5 / dir_length)*direction_vector
+    short_vector = (0.4 / dir_length)*direction_vector
 
     vector_in_map = shoulder_pose + short_vector
-    return list(vector_in_map)
+    print(f"shoulder pose: {shoulder_pose}")
+    print(f"short vector: {short_vector}")
+    print(f"vector in map: {vector_in_map}")
+    # Return vector is in shoulder frame
+    return short_vector
+
+# with real_robot:
+#     MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
+point_to("right", [3, 1.5, 0.9])
