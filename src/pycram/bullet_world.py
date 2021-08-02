@@ -46,6 +46,7 @@ class BulletWorld:
         time.sleep(1) # 0.1
         self.last_bullet_world = BulletWorld.current_bullet_world
         BulletWorld.current_bullet_world = self
+        self.vis_axis = None
 
     def get_objects_by_name(self, name):
         return list(filter(lambda obj: obj.name == name, self.objects))

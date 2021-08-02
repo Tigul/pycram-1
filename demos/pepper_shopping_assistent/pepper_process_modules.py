@@ -148,8 +148,8 @@ class PepperMoveJoints(ProcessModule):
             elif type(right_arm_poses) == str and right_arm_poses == "point":
                 for joint, value in robot_description.i.get_static_joint_chain('right', 'point').items():
                     robot.set_joint_state(joint, value)
-                for i in range(1, 4):
-                    robot.set_joint_state('RFinger1' + str(i), 1)
+                # for i in range(1, 4):
+                #     robot.set_joint_state('RFinger1' + str(i), 1)
 
             if type(left_arm_poses) == dict:
                 for joint, pose in left_arm_poses.items():
@@ -159,8 +159,8 @@ class PepperMoveJoints(ProcessModule):
             elif type(left_arm_poses) == str and left_arm_poses == "point":
                 for joint, value in robot_description.i.get_static_joint_chain('left', 'point').items():
                     robot.set_joint_state(joint, value)
-                for i in range(1, 4):
-                    robot.set_joint_state('LFinger1' + str(i), 1)
+                # for i in range(1, 4):
+                #     robot.set_joint_state('LFinger1' + str(i), 1)
 
             time.sleep(0.5)
 

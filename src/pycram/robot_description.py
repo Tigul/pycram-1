@@ -771,8 +771,10 @@ class PepperDescription(RobotDescription):
 
         l_park = [1.08, 0.51, -0.15, -0.79, 0.00]
         r_park = [1.08, -0.53, 0.00, 0.79, 0.00]
-        l_point = [-0.46, 0.99, -1.18, -0.01, 0.00]
-        r_point = [-0.41, -1.00, 0.50, 0.01, 0.91]
+        #l_point = [-0.46, 0.99, -1.18, -0.01, 0.00]
+        l_point = [0.0, 0.01, 0.0, -0.01, -1.82]
+        #r_point = [-0.41, -1.00, 0.50, 0.01, 0.91]
+        r_point= [0.0, -0.01, 0.0, 0.1, 1.82]
         straight_point = [-0.13, -0.37, 0.46, 0.69, 1.82] # TODO ncohmal gucken wie genau, die hier ist für rechts
 
         left_man.add_static_joint_chains({"park" : l_park, "point" : l_point})
