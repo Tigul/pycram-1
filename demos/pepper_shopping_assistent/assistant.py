@@ -131,19 +131,13 @@ def point_to_2(goal_pose):
     angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
     MotionDesignator(MoveMotionDescription(target=base_pose[0], orientation=angle_as_quanternion)).perform()
     time.sleep(1)
-    # Transform in base base_footprint
-    base_pose_inv = p.invertTransform(base_pose[0], base_pose[1])
-    goal_in_base = p.multiplyTransforms(base_pose_inv[0], base_pose_inv[1], goal_pose, [0, 0, 0, 1])
+    MotionDesignator(MoveArmJointsMotionDescription(left_arm_config='point')).perform()
 
-    left_config = "point" if goal_in_base[0][1] > 0 else None
-    right_config = "point" if goal_in_base[0][1] <= 0 else None
-    MotionDesignator(MoveArmJointsMotionDescription(left_arm_config=left_config, right_arm_config=right_config)).perform()
-
-    shoulder_link = "RShoulder" if right_config else "LShoulder"
+    shoulder_link = "LShoulder"
     shoulder_pose = pepper.get_link_position(shoulder_link)
     shoulder_angle = np.arctan2(goal_pose[2] - shoulder_pose[2], goal_pose[0]-shoulder_pose[0])
     print(shoulder_angle)
-    shoulder_joint = "RShoulderPitch" if shoulder_link == "RShoulder" else "LShoulderPitch"
+    shoulder_joint = "LShoulderPitch"
     shoulder_angle = -shoulder_angle + 0.1
     MotionDesignator(MoveArmJointsMotionDescription(left_arm_poses={shoulder_joint:shoulder_angle})).perform()
     p.addUserDebugLine(shoulder_pose, goal_pose)
