@@ -225,7 +225,9 @@ class PepperRealMoveJoints(ProcessModule):
 
             if type(left_arm_poses) == dict:
                 move_group = moveit_commander.MoveGroupCommander('left_arm')
-                joint_goal = left_arm_poses.values()
+                joint_goal = list(left_arm_poses.values())
+                print(f"Dict: {joint_goal}")
+                print("+++++++++++++++++++++++++++++++++++++++++++++")
                 move_group.go(joint_goal, wait=True)
                 move_group.stop()
             elif type(left_arm_poses) == str:
