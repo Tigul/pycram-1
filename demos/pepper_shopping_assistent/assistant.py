@@ -81,9 +81,21 @@ def point_to_2(goal_pose):
     shoulder_joint = "LShoulderPitch"
     shoulder_angle = -shoulder_angle + 0.1
     MotionDesignator(MoveArmJointsMotionDescription(left_arm_poses={shoulder_joint:shoulder_angle})).perform()
-    p.addUserDebugLine(shoulder_pose, goal_pose)
+    #p.addUserDebugLine(shoulder_pose, goal_pose)
 
-point_to_2([3, 2, 0.8])
+@with_real_robot
+def test():
+    shoulder_joint = "ShoulderPitch"
+    shoulder_angle = 1
+    dict = {"LShoulderPitch": 1,
+            "LShoulderRoll": 0.1,
+            "LElbowYaw": 0.0,
+            "LElbowRoll": -0.1,
+            "LWristYaw": 0.0}
+    MotionDesignator(MoveArmJointsMotionDescription(left_arm_poses={shoulder_joint:shoulder_angle})).perform()
+
+test()
+#point_to_2([3, 2, 0.8])
 #assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
 
 # def point_to(arm, goal):

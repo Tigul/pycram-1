@@ -20,6 +20,7 @@ import pycram.bullet_world_reasoning as btr
 import pybullet as p
 import numpy as np
 import time
+import logging
 
 
 def _park_arms(arm):
@@ -214,7 +215,19 @@ class PepperRealMoveJoints(ProcessModule):
             left_arm_poses = solution['left_arm_poses']
             if type(right_arm_poses) == dict:
                 move_group = moveit_commander.MoveGroupCommander('right_arm')
-                joint_goal = right_arm_poses.values()
+                joint_names = move_group.get_active_joints()
+                curr_joint_values = move_group.get_current_joint_values()
+                joint_goal = dict(zip(joint_names, curr_joint_values))
+                for joint, value in right_arm_poses.items():
+                    if joint in joint_goal.keys():
+                        print("test")
+                        joint_goal[joint] = value
+                    else:
+                        print("++++++++++++++++++++++++++++++")
+                        logging.error(f"The joint: {joint} is not part of this move_group right arm")
+                        logging.error("Aborting execution of process module")
+                        return
+                joint_goal = list(joint_goal.values())
                 move_group.go(joint_goal, wait=True)
                 move_group.stop()
             elif type(right_arm_poses) == str:
@@ -225,9 +238,20 @@ class PepperRealMoveJoints(ProcessModule):
 
             if type(left_arm_poses) == dict:
                 move_group = moveit_commander.MoveGroupCommander('left_arm')
-                joint_goal = list(left_arm_poses.values())
-                print(f"Dict: {joint_goal}")
-                print("+++++++++++++++++++++++++++++++++++++++++++++")
+                joint_names = move_group.get_active_joints()
+                curr_joint_values = move_group.get_current_joint_values()
+                joint_goal = dict(zip(joint_names, curr_joint_values))
+                for joint, value in left_arm_poses.items():
+                    if joint in joint_goal.keys():
+                        print("test")
+                        joint_goal[joint] = value
+                    else:
+                        print("++++++++++++++++++++++++++++++")
+                        logging.error(f"The joint: {joint} is not part of this move_group left arm")
+                        logging.error("Aborting execution of process module")
+                        return
+                print(joint_goal)
+                joint_goal = list(joint_goal.values())
                 move_group.go(joint_goal, wait=True)
                 move_group.stop()
             elif type(left_arm_poses) == str:
