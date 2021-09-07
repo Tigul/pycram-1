@@ -19,15 +19,14 @@ import time
 #rospy.Subscriber('/assistant', String, app_callback)
 #rospy.spin()
 # http://knowrob.org/kb/shop.owl#FruitOrCereal
-
-type_to_knowrob = {}
+knowrob_prefix = "http://knowrob.org/kb/product-taxonomy.owl#"
 
 @with_real_robot
 def assistant(product_type):
     MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
     tf_listener = tf.TransformListener()
     time.sleep(2)
-    item_pose = get_pose_for_product_type(product_type)
+    item_pose = get_pose_for_product_type(prefix + product_type)
     #item_pose = [[0, -3 , 0], [0, 0, 0, 1]]
     robot_pose = tf_listener.lookupTransform('/map', '/base_link', rospy.Time(0))
     route = navigation(item_pose[0], robot_pose[0])
@@ -94,7 +93,8 @@ def test():
             "LWristYaw": 0.0}
     MotionDesignator(MoveArmJointsMotionDescription(left_arm_poses={shoulder_joint:shoulder_angle})).perform()
 
-test()
+with real_robot:
+    MotionDesignator(MoveMotionDescription(target=[-1, -3, 0], orientation=[0, 0, 0, 1])).perform()
 #point_to_2([3, 2, 0.8])
 #assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
 
