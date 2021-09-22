@@ -22,13 +22,13 @@ import numpy as np
 #              'WP14' : np.array([[3.644, -1.91, 0], [0, 0, -0.70, 0.70]]),
 #              'WP15' : np.array([[3.405, -1.118, 0], [0, 0, -0.70, 0.70]])}
 
-waypoints = {'WP1' : np.array([1.8, -0.2, 0]),
-             'WP2' : np.array([1.5, -0.3, 0]),
-             'WP3' : np.array([0.2, -0.5, 0]),
-             'WP4' : np.array([-1, -0.5, 0]),
-             'WP5' : np.array([-1.3, -1, 0]),
+waypoints = {'WP1' : np.array([1.8, 0.1, 0]),
+             'WP2' : np.array([1.5, -0.2, 0]),
+             'WP3' : np.array([0.2, -0.6, 0]),
+             'WP4' : np.array([-1, -0.6, 0]),
+             'WP5' : np.array([-1.5, -1, 0]),
              'WP6' : np.array([-1.5, -2., 0]),
-             'WP7' : np.array([-1.5, -3.1, 0]),
+             'WP7' : np.array([-1.5, -3., 0]),
              'WP8' : np.array([-0.1, -3.2, 0]),
              'WP9' : np.array([0.2, -3.1, 0]),
              'WP10' : np.array([1.1, -3.1, 0]),
@@ -36,9 +36,10 @@ waypoints = {'WP1' : np.array([1.8, -0.2, 0]),
              'WP12' : np.array([2.5, -3.1, 0]),
              'WP13' : np.array([3., -2.5, 0]),
              'WP14' : np.array([3, -1.5, 0]),
-             'WP15' : np.array([3., -0.8, 0])}
+             'WP15' : np.array([3., -0.6, 0])}
 
 def navigation(shelf_pose, init_pose):
+    shelf_pose[2] = 0
     shelf_pose = np.array(shelf_pose)
     init_pose = np.array(init_pose)
     init_wp = "WP1"
@@ -51,8 +52,8 @@ def navigation(shelf_pose, init_pose):
     route = [init_wp]
     while True:
         l_neighbour, r_neighbour = get_neighbour_wps(curr_wp)
-        if np.linalg.norm(waypoints[curr_wp]-shelf_pose) < np.linalg.norm(waypoints[l_neighbour]-shelf_pose) and \
-            np.linalg.norm(waypoints[curr_wp]-shelf_pose) < np.linalg.norm(waypoints[r_neighbour]-shelf_pose):
+        if np.linalg.norm(waypoints[curr_wp]-shelf_pose) +0.1 < np.linalg.norm(waypoints[l_neighbour]-shelf_pose) and \
+            np.linalg.norm(waypoints[curr_wp]-shelf_pose) + 0.1 < np.linalg.norm(waypoints[r_neighbour]-shelf_pose):
             break
 
         if np.linalg.norm(waypoints[l_neighbour]-shelf_pose) < np.linalg.norm(waypoints[r_neighbour]-shelf_pose):

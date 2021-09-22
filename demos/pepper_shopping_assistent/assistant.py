@@ -6,6 +6,7 @@ from pycram.ik import request_ik
 from navigation import navigation
 from std_msgs.msg import String
 from pycram.robot_description import InitializedRobotDescription as robot_description
+from std_srvs.srv import Empty
 import numpy as np
 import pybullet as p
 import pepper_process_modules
@@ -14,31 +15,35 @@ import motion_desig_grounding
 import rospy
 import tf
 import time
+import moveit_commander
+import moveit_msgs.msg
+import sys
 
-#node = rospy.init_node("assistant")
-#rospy.Subscriber('/assistant', String, app_callback)
-#rospy.spin()
 # http://knowrob.org/kb/shop.owl#FruitOrCereal
 knowrob_prefix = "http://knowrob.org/kb/product-taxonomy.owl#"
 
 @with_real_robot
 def assistant(product_type):
-    MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
+    #MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
+    rospy.wait_for_service('move_head_straight')
+    try:
+        move_head = rospy.ServiceProxy('move_head_straight', Empty)
+        move_head()
+    except rospy.ServiceException as e:
+        rospy.logerr(e)
     tf_listener = tf.TransformListener()
-    time.sleep(2)
-    item_pose = get_pose_for_product_type(prefix + product_type)
-    #item_pose = [[0, -3 , 0], [0, 0, 0, 1]]
-    robot_pose = tf_listener.lookupTransform('/map', '/base_link', rospy.Time(0))
+    time.sleep(1)
+    #item_pose = get_pose_for_product_type(knowrob_prefix + product_type)
+    item_pose = [[-3.1, -2, 0.8], [0, 0, 0, 1]]
+    robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
     route = navigation(item_pose[0], robot_pose[0])
     print(route)
-    #route = navigation([-0.1, -3.2, 0], [0, 0, -0.70, 0.70])
     for pose in route:
-        robot_pose = tf_listener.lookupTransform('/map', '/base_link', rospy.Time(0))
+        robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
         angle_to_goal = np.arctan2(pose[1] - robot_pose[0][1], pose[0] - robot_pose[0][0])
         angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
-        print(angle_as_quanternion)
         MotionDesignator(MoveMotionDescription(target=pose, orientation=angle_as_quanternion)).perform()
-    point_to_2(item_pose)
+    #point_to_2(item_pose)
 
 @with_real_robot
 def simple_assistant():
@@ -55,8 +60,8 @@ def simple_assistant():
 
 
 def app_callback(msg):
-    knowrob_type = type_to_knowrob[msg.data]
-    assistant(knowrob_type)
+    product_type = msg.data
+    assistant(product_type)
 
 @with_real_robot
 def point_to_2(goal_pose):
@@ -93,9 +98,28 @@ def test():
             "LWristYaw": 0.0}
     MotionDesignator(MoveArmJointsMotionDescription(left_arm_poses={shoulder_joint:shoulder_angle})).perform()
 
-with real_robot:
-    MotionDesignator(MoveMotionDescription(target=[-1, -3, 0], orientation=[0, 0, 0, 1])).perform()
-#point_to_2([3, 2, 0.8])
+def correct_head_position():
+    moveit_commander.roscpp_initialize(sys.argv)
+    robot = moveit_commander.RobotCommander()
+    scene = moveit_commander.PlanningSceneInterface()
+
+    move_group = moveit_commander.MoveGroupCommander('head')
+    joint_names = move_group.get_active_joints()
+    curr_joint_values = move_group.get_current_joint_values()
+    print(joint_names)
+    print(curr_joint_values)
+    joint_goal = [0.0, 0.0]
+    move_group.go(joint_goal, wait=True)
+    move_group.stop()
+
+
+# with real_robot:
+#     MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
+#node = rospy.init_node("assistant")
+rospy.Subscriber('/assistant', String, app_callback)
+rospy.spin()
+
+
 #assistant('http://knowrob.org/kb/shop.owl#FruitOrCereal')
 
 # def point_to(arm, goal):

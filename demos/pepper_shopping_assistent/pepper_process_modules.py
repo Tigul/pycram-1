@@ -185,6 +185,7 @@ class PepperRealNavigation(ProcessModule):
         def feedback_callback(msg):
             pass
         def done_callback(state, result):
+            rospy.loginfo("Finished Navigation")
             for k in GoalStatus.__dict__.keys():
                 if state == GoalStatus.__dict__[k]:
                     rospy.loginfo(f"Navigation has Finished with the result: {k}")
