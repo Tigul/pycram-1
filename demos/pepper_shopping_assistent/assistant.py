@@ -33,8 +33,8 @@ def assistant(product_type):
         rospy.logerr(e)
     tf_listener = tf.TransformListener()
     time.sleep(1)
-    #item_pose = get_pose_for_product_type(knowrob_prefix + product_type)
-    item_pose = [[-3.1, -2, 0.8], [0, 0, 0, 1]]
+    item_pose = get_pose_for_product_type(knowrob_prefix + product_type)
+    #item_pose = [[-3.1, -2, 0.8], [0, 0, 0, 1]]
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
     route = navigation(item_pose[0], robot_pose[0])
     print(route)
