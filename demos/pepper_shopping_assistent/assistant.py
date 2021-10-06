@@ -38,12 +38,13 @@ def assistant(product_type):
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
     route = navigation(item_pose[0], robot_pose[0])
     print(route)
-    for pose in route:
-        robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
-        angle_to_goal = np.arctan2(pose[1] - robot_pose[0][1], pose[0] - robot_pose[0][0])
-        angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
-        MotionDesignator(MoveMotionDescription(target=pose, orientation=angle_as_quanternion)).perform()
-    #point_to_2(item_pose)
+    goal = route[-1]
+    #MotionDesignator(MoveMotionDescription(target=goal, orientation=)).perform()
+    robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
+    angle_to_goal = np.arctan2(goal[1] - robot_pose[0][1], goal[0] - robot_pose[0][0])
+    angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
+    MotionDesignator(MoveMotionDescription(target=goal, orientation=angle_as_quanternion)).perform()
+    # #point_to_2(item_pose)
 
 @with_real_robot
 def simple_assistant():

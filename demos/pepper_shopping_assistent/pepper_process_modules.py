@@ -244,12 +244,11 @@ class PepperRealMoveJoints(ProcessModule):
                 joint_goal = dict(zip(joint_names, curr_joint_values))
                 for joint, value in left_arm_poses.items():
                     if joint in joint_goal.keys():
-                        print("test")
                         joint_goal[joint] = value
                     else:
                         print("++++++++++++++++++++++++++++++")
-                        logging.error(f"The joint: {joint} is not part of this move_group left arm")
-                        logging.error("Aborting execution of process module")
+                        rospy.logerr(f"The joint: {joint} is not part of this move_group left arm")
+                        rospy.logerr("Aborting execution of process module")
                         return
                 print(joint_goal)
                 joint_goal = list(joint_goal.values())
