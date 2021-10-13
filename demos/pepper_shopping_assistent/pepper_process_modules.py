@@ -10,6 +10,7 @@ from std_msgs.msg import Header
 from actionlib_msgs.msg import GoalID, GoalStatus
 from std_msgs.msg import String
 from moveit_commander.conversions import pose_to_list
+from pepper_behaviour_srvs.srv import MoveArm, MoveHead
 import sys
 import moveit_commander
 import moveit_msgs.msg
@@ -20,6 +21,7 @@ import pycram.bullet_world_reasoning as btr
 import pybullet as p
 import numpy as np
 import time
+import tf
 import logging
 
 
@@ -204,6 +206,64 @@ class PepperRealNavigation(ProcessModule):
             client.send_goal(goal,active_cb=active_callback, done_cb=done_callback, feedback_cb=feedback_callback)
             wait = client.wait_for_result()
 
+class PepperRealMoveJointsNaoqi(ProcessModule):
+    def _execute(self, desig):
+        solution = desig.reference()
+        if solution['cmd'] == 'move-joints':
+            right_arm_poses = solution['right_arm_poses']
+            left_arm_poses = solution['left_arm_poses']
+            arm_joint_names =  ['ShoulderPitch', 'ShoulderRoll', 'ElbowYaw', 'ElbowRoll', 'WristYaw']
+            if type(right_arm_poses) == dict :
+                rospy.loginfo("Waiting Right for Arm services")
+                rospy.wait_for_service('move_arm')
+                try:
+                    move_arm = rospy.ServiceProxy('move_arm', MoveArm)
+                    move_arm(list(right_arm_poses.keys()),list(right_arm_poses.values()))
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
+            elif type(right_arm_poses) == str:
+                joint_goal = list(robot_description.i.get_static_joint_chain('right', right_arm_poses).values())
+                joint_names = ['R' + name for name in arm_joint_names]
+                rospy.wait_for_service('move_arm')
+                try:
+                    move_arm = rospy.ServiceProxy('move_arm', MoveArm)
+                    move_arm(list(joint_names, joint_goal))
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
+
+            if type(left_arm_poses) == dict:
+                rospy.loginfo("Waiting for Left Arm services")
+
+                rospy.wait_for_service('move_arm')
+                rospy.loginfo("Found Arm services")
+                try:
+                    move_arm = rospy.ServiceProxy('move_arm', MoveArm)
+                    move_arm(list(left_arm_poses.keys()),list(left_arm_poses.values()))
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
+                rospy.loginfo("Done moving arm")
+            elif type(left_arm_poses) == str:
+                joint_goal = list(robot_description.i.get_static_joint_chain('left', left_arm_poses).values())
+                joint_names = ['L' + name for name in arm_joint_names]
+                rospy.wait_for_service('move_arm')
+                try:
+                    move_arm = rospy.ServiceProxy('move_arm', MoveArm)
+                    move_arm(joint_names, joint_goal)
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
+
+class PepperRealMoveHead(ProcessModule):
+    def _execute(self, desig):
+        solution = desig.reference()
+        if solution['cmd'] == 'looking':
+            tf_listener = tf.TransformListener()
+            time.sleep(1)
+            neck_pose = tf_listener.lookupTransform("/map", "/Neck", rospy.Time(0))
+
+            target_in_neck = transform(solution['target'], neck_pose)
+            # pitch = 
+            # yaw =
+
 class PepperRealMoveJoints(ProcessModule):
     def _execute(self, desig):
         solution = desig.reference()
@@ -270,7 +330,7 @@ PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),
                               'world-state-detecting' : PepperWorldStateDetecting()}
 
 PepperProcessModulesReal = {'navigate': PepperRealNavigation(),
-                            'move-joints': PepperRealMoveJoints()}
+                            'move-joints': PepperRealMoveJointsNaoqi()}
 
 def available_process_modules(desig):
     robot_name = robot_description.i.name

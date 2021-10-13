@@ -7,6 +7,7 @@ from navigation import navigation
 from std_msgs.msg import String
 from pycram.robot_description import InitializedRobotDescription as robot_description
 from std_srvs.srv import Empty
+from pepper_behaviour_srvs.srv import Speak, MoveHead
 import numpy as np
 import pybullet as p
 import pepper_process_modules
@@ -25,10 +26,13 @@ knowrob_prefix = "http://knowrob.org/kb/product-taxonomy.owl#"
 @with_real_robot
 def assistant(product_type):
     #MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
-    rospy.wait_for_service('move_head_straight')
+    rospy.wait_for_service('move_head')
+    rospy.wait_for_service('speak')
     try:
-        move_head = rospy.ServiceProxy('move_head_straight', Empty)
-        move_head()
+        move_head = rospy.ServiceProxy('move_head', MoveHead)
+        say = rospy.ServiceProxy("speak", Speak)
+        move_head([0,0])
+        say("Ok, follow me")
     except rospy.ServiceException as e:
         rospy.logerr(e)
     tf_listener = tf.TransformListener()
@@ -44,7 +48,7 @@ def assistant(product_type):
     angle_to_goal = np.arctan2(goal[1] - robot_pose[0][1], goal[0] - robot_pose[0][0])
     angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
     MotionDesignator(MoveMotionDescription(target=goal, orientation=angle_as_quanternion)).perform()
-    # #point_to_2(item_pose)
+    point_to_2(item_pose[0])
 
 @with_real_robot
 def simple_assistant():
@@ -68,24 +72,26 @@ def app_callback(msg):
 def point_to_2(goal_pose):
     tf_listener = tf.TransformListener()
     time.sleep(2)
-    base_pose = tf_listener.lookupTransform('/map', '/base_link',  rospy.Time(0))
+    base_pose = tf_listener.lookupTransform('/map', '/Tibia',  rospy.Time(0))
 
     #base_pose = pepper.get_position_and_orientation()
-    #print(base_pose)
+    print(base_pose)
     angle_to_goal = np.arctan2(goal_pose[1] - base_pose[0][1], goal_pose[0] - base_pose[0][0])
     angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
-    MotionDesignator(MoveMotionDescription(target=base_pose[0], orientation=angle_as_quanternion)).perform()
+    #MotionDesignator(MoveMotionDescription(target=base_pose[0], orientation=angle_as_quanternion)).perform()
     time.sleep(1)
-    MotionDesignator(MoveArmJointsMotionDescription(left_arm_config='point')).perform()
+    #MotionDesignator(MoveArmJointsMotionDescription(left_arm_config='point')).perform()
 
     shoulder_link = "LShoulder"
     #shoulder_pose = pepper.get_link_position(shoulder_link)
     shoulder_pose = tf_listener.lookupTransform('/map', shoulder_link, rospy.Time(0))[0]
     shoulder_angle = np.arctan2(goal_pose[2] - shoulder_pose[2], goal_pose[0]-shoulder_pose[0])
-    print(shoulder_angle)
     shoulder_joint = "LShoulderPitch"
-    shoulder_angle = -shoulder_angle + 0.1
-    MotionDesignator(MoveArmJointsMotionDescription(left_arm_poses={shoulder_joint:shoulder_angle})).perform()
+    shoulder_angle = round(-shoulder_angle + 0.1, 2)
+    joint_goal = robot_description.i.get_static_joint_chain('left', 'point')
+    joint_goal[shoulder_joint] = shoulder_angle
+
+    MotionDesignator(MoveArmJointsMotionDescription(left_arm_poses=joint_goal)).perform()
     #p.addUserDebugLine(shoulder_pose, goal_pose)
 
 @with_real_robot
