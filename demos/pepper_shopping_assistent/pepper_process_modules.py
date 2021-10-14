@@ -261,8 +261,18 @@ class PepperRealMoveHead(ProcessModule):
             neck_pose = tf_listener.lookupTransform("/map", "/Neck", rospy.Time(0))
 
             target_in_neck = transform(solution['target'], neck_pose)
-            # pitch = 
-            # yaw =
+
+            pitch = np.arctan([target_in_neck[1], target_in_neck[0]])
+            yaw = np.arctan([target_in_neck[2], target_in_neck[0] ** 2 + target_in_neck[1] ** 2])
+
+            rospy.wait_for_service('move_head')
+            rospy.loginfo("Found Head services")
+            try:
+                move_head = rospy.ServiceProxy('move_arm', MoveHead)
+                move_head([yaw, pitch])
+            except rospy.ServiceException as e:
+                rospy.logerr(e)
+            rospy.loginfo("Done moving head")
 
 class PepperRealMoveJoints(ProcessModule):
     def _execute(self, desig):
