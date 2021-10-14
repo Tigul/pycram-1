@@ -715,12 +715,23 @@ class HSRDescription(RobotDescription):
 
 class PepperDescription(RobotDescription):
     def __init__(self):
-        super().__init__("pepper", "base_link", "base_footprint", "torso", "base_link_fixedjoint")
+        super().__init__("pepper", "base_footprint", "base_baselink", "torso", "base_link_fixedjoint")
 
-        camera = CameraDescription("CameraDepth_optical_frame",
-                            minimal_height=1.0, maximal_height=1.0,
-                            horizontal_angle=1.0, vertical_angle=1.0)
-        self.add_camera("camera", camera)
+        camera_depth = CameraDescription("CameraDepth_optical_frame",
+                            minimal_height=1.10, maximal_height=1.10,
+                            horizontal_angle=1.012, vertical_angle=0.7853)
+
+        camera_bottom = CameraDescription("CameraBottom_optical_frame",
+                            minimal_height=1.04, maximal_height=1.04,
+                            horizontal_angle=0.9983, vertical_angle=0.7731)
+
+        camera_top = CameraDescription("CameraTop_optical_frame",
+                            minimal_height=1.14, maximal_height=1.14,
+                            horizontal_angle=0.9983, vertical_angle=0.7731)
+
+        self.add_camera("camera", camera_depth)
+        self.add_camera("camera_bottom", camera_bottom)
+        self.add_camera("camera_top", camera_top)
 
         # The axis which points away from the camera and along which the picture of the camera is created
         self.front_facing_axis = [0, 0, 1]
