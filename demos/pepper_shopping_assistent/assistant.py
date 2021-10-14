@@ -39,18 +39,19 @@ def assistant(product_args):
         rospy.logerr(e)
     tf_listener = tf.TransformListener()
     time.sleep(1)
-    item_pose = get_pose_for_product_type(knowrob_prefix + product_type)
-    #item_pose = [[-3.1, -2, 0.8], [0, 0, 0, 1]]
+    shelf_pose = get_pose_for_product_type(product_type)
+    #shelf_pose = [[-3.1, -2, 0.8], [0, 0, 0, 1]]
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
-    route = navigation(item_pose[0], robot_pose[0])
+    route = navigation(shelf_pose[0], robot_pose[0])
     print(route)
     goal = route[-1]
     #MotionDesignator(MoveMotionDescription(target=goal, orientation=)).perform()
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
-    angle_to_goal = np.arctan2(goal[1] - robot_pose[0][1], goal[0] - robot_pose[0][0])
+    #angle_to_goal = np.arctan2(goal[1] - robot_pose[0][1], goal[0] - robot_pose[0][0])
+    angle_to_goal = np.arctan2(goal[1] - shelf_pose[0][1], goal[0] - shelf_pose[0][0])
     angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
     MotionDesignator(MoveMotionDescription(target=goal, orientation=angle_as_quanternion)).perform()
-    point_to_2(item_pose[0])
+    point_to_2(shelf_pose[0])
 
 @with_real_robot
 def simple_assistant():
