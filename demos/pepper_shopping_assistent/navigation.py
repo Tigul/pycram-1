@@ -38,6 +38,15 @@ waypoints = {'WP1' : np.array([1.8, 0.1, 0]),
              'WP14' : np.array([3, -1.5, 0]),
              'WP15' : np.array([3., -0.6, 0])}
 
+def nearest_wp(shelf_pose):
+    wps = list(waypoints.values())
+    shelf_pose = np.array(shelf_pose)
+    distances = [np.linalg.norm(shelf_pose - w) for w in wps]
+    return wps[np.argmin(distances)]
+
+print(nearest_wp([3, -3, 0.8]))
+
+
 def navigation(shelf_pose, init_pose):
     shelf_pose[2] = 0
     shelf_pose = np.array(shelf_pose)
