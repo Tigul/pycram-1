@@ -66,6 +66,14 @@ def get_pose_for_product_type(product_type):
 
 class Query:
     """
+    This class generates a SPARQL query which asks for the shelf- and shelf floor
+    location of a product corresponding to a dictionary of arguments. The arguments
+    have to contain the type of the product. Additional options could be the price,
+    special ingredients or the brand.
+
+    These are the placeholder used in the base_query, every recipe must contain
+    every placeholder.
+
     ADD_QUERY: Additional Queries that are part of the SPARQL query
     ADD_PREFIX: Additional Prefixes, these are defined before the actual query
     FILTER: Optional filters that restrict the solutions of the query
@@ -121,6 +129,12 @@ class Query:
                             'ORDER': ''}}
 
     def __init__(self, args):
+        """
+        The constructor takes the arguments and calls the respective methods to
+        generate the Query.
+        :param args: A dictionary of properties the product, for which this query
+        asks, should have.
+        """
         self.fill_in = {'TYPE' : args['product']}
         self.args = args
         self.generated_query = self._generate_query(args)
@@ -130,7 +144,7 @@ class Query:
     def _generate_query(self, args):
         """
         Checks which recipes are needed for this query, the strings of the
-        used recipes are then combined and replace the placeholder in the base query. 
+        used recipes are then combined and replace the placeholder in the base query.
         """
         working_list = []
         for key in args.keys():
@@ -150,7 +164,7 @@ class Query:
         used in this query.
         """
         res_dict = {}
-        for key in dicts[0].keys():
+        for key in ['ADD_QUERY', 'FILTER', 'ADD_PREFIX', 'ADD_VAR', 'ORDER']:
             res_dict[key] = ""
             for d in dicts:
                 if type(d[key]) == LambdaType:
@@ -161,6 +175,11 @@ class Query:
 
 
     def _fill_query(self):
+        """
+        Fills the remaining placeholder which are specific for a specific product.
+        Here all placeholder created by additional queries are inserted.
+        The inserted values could be, for example, the product type or brand name. 
+        """
         self.filled_query = self.generated_query
         for key, value in self.fill_in.items():
             self.filled_query = self.filled_query.replace(key, value)
