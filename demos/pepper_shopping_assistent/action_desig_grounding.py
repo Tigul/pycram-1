@@ -2,7 +2,7 @@ from pycram.action_designator import NavigateDescription
 from pycram.motion_designator import *
 from pycram.designator import DesignatorError
 from pycram.motion_designator import MotionDesignator, MoveMotionDescription
-from pycram.knowrob import find_shelf_pose, get_all_shelves
+#from pycram.knowrob import find_shelf_pose, get_all_shelves
 
 
 def ground_navigating(self):

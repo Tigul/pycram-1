@@ -227,7 +227,7 @@ class PepperRealMoveJointsNaoqi(ProcessModule):
                 rospy.wait_for_service('move_arm')
                 try:
                     move_arm = rospy.ServiceProxy('move_arm', MoveArm)
-                    move_arm(list(joint_names, joint_goal))
+                    move_arm(joint_names, joint_goal)
                 except rospy.ServiceException as e:
                     rospy.logerr(e)
 

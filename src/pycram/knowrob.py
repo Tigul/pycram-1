@@ -16,7 +16,7 @@ def get_pose_for_product_type(product_type):
     PREFIX loc: <http://knowrob.org/kg/ProductToShelf.owl#> \
     PREFIX owl: <http://www.w3.org/2002/07/owl#> \
     PREFIX tax: <http://knowrob.org/kg/ProductTaxonomy.owl#> \
-    select ?shelf ?product ?shelf_floor ?price { \
+    select ?shelf ?shelf_floor ?product ?price { \
         ?product rdf:type tax:TYPE. \
         ?product owl:sameAs ?prod.\
         ?prod loc:stored_in ?shelf.\
@@ -50,6 +50,8 @@ def get_pose_for_product_type(product_type):
 
     # The shelf returned by the taxonomy, this is not the same as the one in the belief state
     shelf_sparq = product_query['Row']['term'][1]
+    shelf_floor = product_query['Row']['term'][2].split('Shelffloor')[1]
+    floor_height = 0.2 + int(shelf_floor) * 0.25
     shelf_number = int(shelf_sparq.split('Shelf')[2])
     # All shelves in the belief state
     shelves = prolog.once("get_all_shelves(S)")['S']
@@ -61,8 +63,11 @@ def get_pose_for_product_type(product_type):
         id_shelf = np.ceil(id/2)
         if shelf_number == id_shelf:
             pose = prolog.once(f"is_at('{tag['Marker']}', ['map', T, R])")
+            pose['T'][2] = floor_height
             return pose['T'], pose['R']
     raise PrologException("No shelf position was found for the shelf the product is stored in.")
+
+
 
 class Query:
     """
@@ -178,7 +183,7 @@ class Query:
         """
         Fills the remaining placeholder which are specific for a specific product.
         Here all placeholder created by additional queries are inserted.
-        The inserted values could be, for example, the product type or brand name. 
+        The inserted values could be, for example, the product type or brand name.
         """
         self.filled_query = self.generated_query
         for key, value in self.fill_in.items():

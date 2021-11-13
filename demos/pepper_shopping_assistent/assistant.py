@@ -3,7 +3,7 @@ from pycram.process_module import with_real_robot, real_robot, with_simulated_ro
 from pycram.motion_designator import *
 from pycram.bullet_world import BulletWorld, Object
 from pycram.ik import request_ik
-from navigation import navigation
+from navigation import navigation, nearest_wp
 from std_msgs.msg import String
 from pycram.robot_description import InitializedRobotDescription as robot_description
 from std_srvs.srv import Empty
@@ -28,28 +28,31 @@ knowrob_prefix = "http://knowrob.org/kb/product-taxonomy.owl#"
 @with_real_robot
 def assistant(product_args):
     product_type = product_args['product']
-    #MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
-    #rospy.wait_for_service('speak')
+    # rospy.wait_for_service('speak')
     # try:
     #     say = rospy.ServiceProxy("speak", Speak)
     #     say("Ok, follow me")
     # except rospy.ServiceException as e:
     #     rospy.logerr(e)
+    #MotionDesignator(MoveArmJointsMotionDescription(left_arm_config="park", right_arm_config="park")).perform()
+
     tf_listener = tf.TransformListener()
     time.sleep(1)
     shelf_pose = get_pose_for_product_type(product_type)
+    shelf_pose = [[-1.5, -2, 0], [0, 0, 0, 1]]
     print(shelf_pose)
     #shelf_pose = [[3, -3, 0.8], [0, 0, 0, 1]]
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
     print("after pose")
-    route = navigation(shelf_pose[0], robot_pose[0])
-    print(route)
-    goal = route[-1]
-    #MotionDesignator(MoveMotionDescription(target=goal, orientation=)).perform()
+    #route = navigation(shelf_pose[0], robot_pose[0])
+    goal = nearest_wp(shelf_pose[0])
+    #goal = route[-1]
+    print(goal)
+        #MotionDesignator(MoveMotionDescription(target=goal, orientation=)).perform()
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
     #angle_to_goal = np.arctan2(goal[1] - robot_pose[0][1], goal[0] - robot_pose[0][0])
-    angle_to_goal = np.arctan2(goal[1] - shelf_pose[0][1], goal[0] - shelf_pose[0][0])
-    angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, -angle_to_goal, axes="sxyz"))
+    angle_to_goal = np.arctan2(goal[1] - shelf_pose[0][1], goal[0] - shelf_pose[0][0]) + np.pi
+    angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
     MotionDesignator(MoveMotionDescription(target=goal, orientation=angle_as_quanternion)).perform()
     #point_to_2(shelf_pose[0])
 
@@ -72,34 +75,11 @@ def app_callback(msg):
 
 @with_real_robot
 def point_to_2(goal_pose):
-    tf_listener = tf.TransformListener()
-    time.sleep(2)
-    base_pose = tf_listener.lookupTransform('/map', '/base',  rospy.Time(0))
+    print(goal_pose)
 
-    #base_pose = pepper.get_position_and_orientation()
-    print(base_pose)
-    angle_to_goal = np.arctan2(goal_pose[1] - base_pose[0][1], goal_pose[0] - base_pose[0][0])
-    angle_as_quanternion = list(tf.transformations.quaternion_from_euler(0, 0, angle_to_goal, axes="sxyz"))
-    #MotionDesignator(MoveMotionDescription(target=base_pose[0], orientation=angle_as_quanternion)).perform()
-    time.sleep(1)
-    #MotionDesignator(MoveArmJointsMotionDescription(left_arm_config='point')).perform()
-
-    shoulder_link = "LShoulder"
-    #shoulder_pose = pepper.get_link_position(shoulder_link)
-    #shoulder_pose = tf_listener.lookupTransform('/map', shoulder_link, rospy.Time(0))[0]
-    shoulder_pose = [base_pose[0][0], base_pose[0][1], base_pose[0][2]+0.9]
-    shoulder_in_base = [0, 0.15, 0.9]
-    goal_in_base = np.array(goal_pose) - np.array(shoulder_pose)
-    p = PoseStamped()
-    p.pose.position.x = goal_pose[0]
-    p.pose.position.y = goal_pose[1]
-    p.pose.position.z = goal_pose[2]
-    p.header.frame_id = 'map'
-    goal_in_base = tf_listener.transformPose('/base', p)
-
-    shoulder_angle = np.arctan2(goal_in_base.pose.position.z - shoulder_in_base[2], goal_in_base.pose.position.x-shoulder_in_base[0])
+    shoulder_angle = np.arctan2(goal_pose[2]-0.9 , 0.8)
     shoulder_joint = "LShoulderPitch"
-    shoulder_angle = round(-shoulder_angle + 0.1, 2)
+    shoulder_angle = round(-shoulder_angle+0.1, 2)
     print(shoulder_angle)
     joint_goal = robot_description.i.get_static_joint_chain('left', 'point')
     joint_goal[shoulder_joint] = shoulder_angle
@@ -128,4 +108,4 @@ def correct_head_position():
 #node = rospy.init_node("assistant")
 rospy.Subscriber('/assistant', String, app_callback)
 #rospy.spin()
-# point_to_2([4.3, 2.7, 0.])
+#point_to_2([4.3, -2.7, 0.])
