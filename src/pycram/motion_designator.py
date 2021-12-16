@@ -238,3 +238,9 @@ class WorldStateDetectingMotionDescription(MotionDesignatorDescription):
 	def __init__(self, object_type):
 		self.cmd = 'world-state-detecting'
 		self.object_type = object_type
+
+class SpeechMotionDescription(MotionDesignatorDescription):
+	text: str
+	def __init__(self, text):
+		self.cmd = 'speech'
+		self.text = text

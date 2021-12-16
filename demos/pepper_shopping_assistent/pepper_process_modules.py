@@ -181,6 +181,10 @@ class PepperWorldStateDetecting(ProcessModule):
 
 
 class PepperRealNavigation(ProcessModule):
+    """
+    This process module is used to navigate Pepper to a given goal. For navigation
+    the ROS navigation stack is utilized, in particular the move_base node.
+    """
     def _execute(self, desig):
         def active_callback():
             rospy.loginfo("Start Navigating")
@@ -207,6 +211,13 @@ class PepperRealNavigation(ProcessModule):
             wait = client.wait_for_result()
 
 class PepperRealMoveJointsNaoqi(ProcessModule):
+    """
+    Process Module for Pepper that moves the joint of one or both arms. The process
+    module can either take a dictionary containing joint names and values or
+    a pre-defined joint pose for an arm.
+    For moving the arm of the robot a ROS service message is sent to the pepper
+    behaviour node which is conntected to the robot.
+    """
     def _execute(self, desig):
         solution = desig.reference()
         if solution['cmd'] == 'move-joints':
@@ -253,6 +264,14 @@ class PepperRealMoveJointsNaoqi(ProcessModule):
                     rospy.logerr(e)
 
 class PepperRealMoveHead(ProcessModule):
+    """
+    Moves the head of Pepper to look at a specific position or object. To calculate
+    the joint position, which the head should be moved to, the current position
+    in world coordinates is lookedup from tf and the arctan angel between the
+    neck and goal position is calculated.
+    For moving the head joint the pepper_behaviour_node is used which is connected
+    to the real robot.
+    """
     def _execute(self, desig):
         solution = desig.reference()
         if solution['cmd'] == 'looking':
@@ -274,61 +293,17 @@ class PepperRealMoveHead(ProcessModule):
                 rospy.logerr(e)
             rospy.loginfo("Done moving head")
 
-class PepperRealMoveJoints(ProcessModule):
+class PepperRealSpeaking(ProcessModule):
     def _execute(self, desig):
         solution = desig.reference()
-        if solution['cmd'] == 'move-joints':
-            moveit_commander.roscpp_initialize(sys.argv)
-            robot = moveit_commander.RobotCommander()
-            scene = moveit_commander.PlanningSceneInterface()
-
-            right_arm_poses = solution['right_arm_poses']
-            left_arm_poses = solution['left_arm_poses']
-            if type(right_arm_poses) == dict:
-                move_group = moveit_commander.MoveGroupCommander('right_arm')
-                joint_names = move_group.get_active_joints()
-                curr_joint_values = move_group.get_current_joint_values()
-                joint_goal = dict(zip(joint_names, curr_joint_values))
-                for joint, value in right_arm_poses.items():
-                    if joint in joint_goal.keys():
-                        print("test")
-                        joint_goal[joint] = value
-                    else:
-                        print("++++++++++++++++++++++++++++++")
-                        logging.error(f"The joint: {joint} is not part of this move_group right arm")
-                        logging.error("Aborting execution of process module")
-                        return
-                joint_goal = list(joint_goal.values())
-                move_group.go(joint_goal, wait=True)
-                move_group.stop()
-            elif type(right_arm_poses) == str:
-                move_group = moveit_commander.MoveGroupCommander('right_arm')
-                joint_goal = list(robot_description.i.get_static_joint_chain('right', right_arm_poses).values())
-                move_group.go(joint_goal, wait=True)
-                move_group.stop()
-
-            if type(left_arm_poses) == dict:
-                move_group = moveit_commander.MoveGroupCommander('left_arm')
-                joint_names = move_group.get_active_joints()
-                curr_joint_values = move_group.get_current_joint_values()
-                joint_goal = dict(zip(joint_names, curr_joint_values))
-                for joint, value in left_arm_poses.items():
-                    if joint in joint_goal.keys():
-                        joint_goal[joint] = value
-                    else:
-                        print("++++++++++++++++++++++++++++++")
-                        rospy.logerr(f"The joint: {joint} is not part of this move_group left arm")
-                        rospy.logerr("Aborting execution of process module")
-                        return
-                print(joint_goal)
-                joint_goal = list(joint_goal.values())
-                move_group.go(joint_goal, wait=True)
-                move_group.stop()
-            elif type(left_arm_poses) == str:
-                move_group = moveit_commander.MoveGroupCommander('left_arm')
-                joint_goal = list(robot_description.i.get_static_joint_chain('left', left_arm_poses).values())
-                move_group.go(joint_goal, wait=True)
-                move_group.stop()
+        if solution['cmd'] == 'speech':
+            text = solution['text']
+                rospy.wait_for_service('speak')
+                try:
+                    say = rospy.ServiceProxy("speak", Speak)
+                    say(text)
+                except rospy.ServiceException as e:
+                    rospy.logerr(e)
 
 
 PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),
@@ -340,7 +315,8 @@ PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),
                               'world-state-detecting' : PepperWorldStateDetecting()}
 
 PepperProcessModulesReal = {'navigate': PepperRealNavigation(),
-                            'move-joints': PepperRealMoveJointsNaoqi()}
+                            'move-joints': PepperRealMoveJointsNaoqi(),
+                            'speech': PepperRealSpeaking()}
 
 def available_process_modules(desig):
     robot_name = robot_description.i.name

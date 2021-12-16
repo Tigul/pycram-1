@@ -7,44 +7,12 @@ import numpy as np
 
 prolog = Prolog()
 
-def get_pose_for_product_type(product_type):
+def get_pose_for_product_type(args):
+    # Load sparql client to ensure it is loaded when sending the actual query
     prolog.once("use_module(library('semweb/sparql_client')).")
-    # query = prolog.once(f"subclass_of(Product, '{product_type}'), has_type(Item, Product).")
-    # prolog.once("use_module(library('semweb/sparql_client')).")
-    #?product tax:has_EAN ?EAN.
-    sparq = "sparql_query('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \
-    PREFIX loc: <http://knowrob.org/kg/ProductToShelf.owl#> \
-    PREFIX owl: <http://www.w3.org/2002/07/owl#> \
-    PREFIX tax: <http://knowrob.org/kg/ProductTaxonomy.owl#> \
-    select ?shelf ?shelf_floor ?product ?price { \
-        ?product rdf:type tax:TYPE. \
-        ?product owl:sameAs ?prod.\
-        ?prod loc:stored_in ?shelf.\
-        ?prod loc:stored_on ?shelf_floor. \
-        ?prod loc:has_price ?price. \
-    } ORDER BY ?price', Row,\
-    [ endpoint('https://api.krr.triply.cc/datasets/mkumpel/TrustNonFoodKG/services/TrustNonFoodKG/sparql/')])."
-    sparq = sparq.replace('TYPE', product_type)
-    #sparq = _generate_query({})
-    #
-    # sparq = "sparql_query('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \
-    # PREFIX loc: <http://knowrob.org/kg/ProductToShelf.owl#> \
-    # PREFIX in: <http://knowrob.org/kg/ingredients.owl>\
-    # PREFIX owl: <http://www.w3.org/2002/07/owl#> \
-    # PREFIX tax: <http://knowrob.org/kg/ProductTaxonomy.owl#> \
-    # select ?shelf where{ \
-    #     ?prod in:has_ingredient ?ingredient. \
-    #     ?ingredient rdf:type ?inclass. \
-    #     FILTER(?inclass = in:Plant_extract) \
-    #     ?prod owl:sameAs ?product. \
-    #     ?product rdf:type tax:toothpaste. \
-    #     ?product loc:stored_in ?shelf.\
-    # } ', Row,\
-    # [ endpoint('https://api.krr.triply.cc/datasets/mkumpel/TrustNonFoodKG/services/TrustNonFoodKG/sparql/')])."
 
-
-    product_query = prolog.once(sparq)
-    print(product_query)
+    sparq = Query(args)
+    product_query = prolog.once(str(sparq))
     if product_query == []:
         raise PrologException(f"{product_type} is not in the product taxonomy")
 
@@ -52,7 +20,7 @@ def get_pose_for_product_type(product_type):
     shelf_sparq = product_query['Row']['term'][1]
     shelf_floor = product_query['Row']['term'][2].split('Shelffloor')[1]
     floor_height = 0.2 + int(shelf_floor) * 0.25
-    shelf_number = int(shelf_sparq.split('Shelf')[2])
+    shelf_number = int(shelf_sparq.split('Shelf')[1])
     # All shelves in the belief state
     shelves = prolog.once("get_all_shelves(S)")['S']
     for shelf in shelves:
@@ -91,7 +59,7 @@ class Query:
     ADD_PREFIX \n \
     PREFIX owl: <http://www.w3.org/2002/07/owl#> \n \
     PREFIX tax: <http://knowrob.org/kb/product-taxonomy.owl#> \n \
-    select ?shelf ?shelf_floor ADD_VAR where{ \n \
+    select ?shelf ?shelf_floor ?instance ADD_VAR where{ \n \
         ADD_QUERY \n \
         FILTER \n \
         ?product rdf:type tax:TYPE. \n \
@@ -109,6 +77,7 @@ class Query:
 
     price_query = "?instance loc:has_price ?price. \n "
 
+    brand_query = "?product owl:sameAs ?brandprod. \n"
     store_brand_filter = "{?brandprod gr:hasBrand ?brand.} \n \
                         UNION \n \
                         {brand:BRA brand:StoreBrand ?brand.}"
@@ -125,8 +94,8 @@ class Query:
                             'FILTER' : '',
                             'ADD_PREFIX' : '',
                             'ADD_VAR': '?price',
-                            'ORDER': lambda args: 'ORDER BY ?price' if args['price'] == 'cheapest' else ('ORDER BY DESC(?price)' if args['price'] == 'highest' else '') },
-                'brand' : {'ADD_QUERY' : '',
+                            'ORDER': lambda args: 'ORDER BY ?price' if args['price'] == 'cheapest' else ('ORDER BY DESC(?price)' if args['price'] == 'priciest' else '') },
+                'brand' : {'ADD_QUERY' : brand_query,
                             'FILTER' : store_brand_filter,
                             'ADD_PREFIX' : brand_prefix + " " + good_relations_prefix,
                             'FILL_IN': 'BRA',
@@ -154,11 +123,13 @@ class Query:
         working_list = []
         for key in args.keys():
             if key in Query.recipes.keys():
+                # Check if new placeholder are defined
                 if 'FILL_IN' in Query.recipes[key].keys():
                     self.fill_in[Query.recipes[key]['FILL_IN']] = args[key]
                 working_list.append(Query.recipes[key])
         working_list = self._combine_dicts(working_list)
         res = Query.base_query
+        # Build the final query
         for key, value in working_list.items():
             res = res.replace(key, value)
         return res
@@ -172,8 +143,10 @@ class Query:
         for key in ['ADD_QUERY', 'FILTER', 'ADD_PREFIX', 'ADD_VAR', 'ORDER']:
             res_dict[key] = ""
             for d in dicts:
+                # If the value is of type lambda call it and then insert the return
                 if type(d[key]) == LambdaType:
                     res_dict[key] += d[key](self.args) + " "
+                # If the value has any other type append it to the resulting dictionary
                 else:
                     res_dict[key] += d[key] + " "
         return res_dict

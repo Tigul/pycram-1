@@ -1,27 +1,6 @@
-# import pepper_process_modules
-# import available_process_modules
-# import motion_designators
 import numpy as np
 
-# {Shelf8 position: x:-0,9499998,y:0,45,z:-4,185,rotation: x:0,y:-0,7071068,z:0,w:0,7071068}
-
-
-# waypoints = {'WP1' : np.array([[2.8, -0.97, 0], [0, 0, -0.70, 0.70]]),
-#              'WP2' : np.array([[1.58, -0.84, 0], [0, 0, -0.70, 0.70]]),
-#              'WP3' : np.array([[0.5, -0.84, 0], [0, 0, -0.70, 0.70]]),
-#              'WP4' : np.array([[-0.85, -0.91, 0], [0, 0, -0.70, 0.70]]),
-#              'WP5' : np.array([[-1.2, -1.35, 0], [0, 0, -0.70, 0.70]]),
-#              'WP6' : np.array([[-1.2, -2.19, 0], [0, 0, -0.70, 0.70]]),
-#              'WP7' : np.array([[-1.2, -3.06, 0], [0, 0, -0.70, 0.70]]),
-#              'WP8' : np.array([[-0.44, -3.4, 0], [0, 0, -0.70, 0.70]]),
-#              'WP9' : np.array([[0.54, -3.37, 0], [0, 0, -0.70, 0.70]]),
-#              'WP10' : np.array([[1.58, -3.43, 0], [0, 0, -0.70, 0.70]]),
-#              'WP11' : np.array([[2.396, -3.44, 0], [0, 0, -0.70, 0.70]]),
-#              'WP12' : np.array([[3.31, -3.36, 0], [0, 0, -0.70, 0.70]]),
-#              'WP13' : np.array([[3.643, -2.757, 0], [0, 0, -0.70, 0.70]]),
-#              'WP14' : np.array([[3.644, -1.91, 0], [0, 0, -0.70, 0.70]]),
-#              'WP15' : np.array([[3.405, -1.118, 0], [0, 0, -0.70, 0.70]])}
-
+# The 15 waypoints scattered over the refills lab
 waypoints = {'WP1' : np.array([1.8, 0.1, 0]),
              'WP2' : np.array([1.5, -0.2, 0]),
              'WP3' : np.array([0.2, -0.6, 0]),
@@ -39,15 +18,29 @@ waypoints = {'WP1' : np.array([1.8, 0.1, 0]),
              'WP15' : np.array([3., -0.6, 0])}
 
 def nearest_wp(shelf_pose):
+    """
+    Calculates the euclicidan distance between the given shelf pose and all waypoints
+    contained the in the waypoints dictionary and returns the position of the waypoint
+    that has the shortest distance to the shelf.
+    :param shelf_pose: The position of the shelf for which a waypoint should be found
+    :return: The waypoint with the shortest euclidian distance
+    """
     wps = list(waypoints.values())
     shelf_pose = np.array(shelf_pose)
     distances = [np.linalg.norm(shelf_pose - w) for w in wps]
     return wps[np.argmin(distances)]
 
-print(nearest_wp([3, -3, 0.8]))
-
 
 def navigation(shelf_pose, init_pose):
+    """
+    Currently Not Used.
+    This method calculates a path, consisting of waypoints, which leads from the
+    current robot position to a shelf position.
+    :param shelf_pose: The shelf position to which a robot should navigate
+    :param init_pose: The current position of the robot.
+    :return: A list of positions, corresponding to waypoints, which lead from the
+    robot position to the shelf position.
+    """
     shelf_pose[2] = 0
     shelf_pose = np.array(shelf_pose)
     init_pose = np.array(init_pose)
@@ -75,6 +68,13 @@ def navigation(shelf_pose, init_pose):
     return route
 
 def get_neighbour_wps(waypoint):
+    """
+    Currently not Used.
+    Returns the name for waypoints which are located left and right the the given
+    waypoint.
+    :param waypoint: The waypoint name for which the neighbours should be found.
+    :return: the names of naighbouring waypoints
+    """
     num = int(waypoint.replace("W", "").replace("P", ""))
     left_neighbour = num % 15 + 1
     right_neighbour = (num - 1) % 15 if (num - 1) % 15 != 0 else 15
