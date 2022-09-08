@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+    <robot name="myfirst">
+      <material name="red">
+        <color rgba="1 0 0 1"/>
+     </material>
+
+
+      <link name="base_link">
+        <visual>
+          <material name="red"/>
+          <geometry>
+            <box size="1 1 1.2"/>
+          </geometry>
+        </visual>
+
+        <collision>
+          <material name="red"/>
+          <geometry>
+            <box size="1 1 1.2"/>
+          </geometry>
+        </collision>
+      </link>
+   </robot>
