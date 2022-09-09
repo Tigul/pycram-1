@@ -9,11 +9,11 @@ from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 from std_msgs.msg import Header
 from actionlib_msgs.msg import GoalID, GoalStatus
 from std_msgs.msg import String
-from moveit_commander.conversions import pose_to_list
+#from moveit_commander.conversions import pose_to_list
 from pepper_behaviour_srvs.srv import MoveArm, MoveHead
 import sys
-import moveit_commander
-import moveit_msgs.msg
+#import moveit_commander
+#import moveit_msgs.msg
 import geometry_msgs.msg
 import rospy
 import actionlib
@@ -298,12 +298,12 @@ class PepperRealSpeaking(ProcessModule):
         solution = desig.reference()
         if solution['cmd'] == 'speech':
             text = solution['text']
-                rospy.wait_for_service('speak')
-                try:
-                    say = rospy.ServiceProxy("speak", Speak)
-                    say(text)
-                except rospy.ServiceException as e:
-                    rospy.logerr(e)
+            rospy.wait_for_service('speak')
+            try:
+                say = rospy.ServiceProxy("speak", Speak)
+                say(text)
+            except rospy.ServiceException as e:
+                rospy.logerr(e)
 
 
 PepperProcessModulesSimulated = {'navigate' : PepperNavigation(),

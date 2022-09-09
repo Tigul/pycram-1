@@ -26,6 +26,27 @@ def _get_joint_names(robot, tip_link):
             res.append(info[1])
     return res
 
+def _get_images_for_target(target_position, cam_position, world=None, size=256):
+    """
+    Calculates the view and projection Matrix and returns the Segmentation mask
+    The segmentation mask indicates for every pixel the visible Object.
+    :param cam_position: The position of the Camera as a list of x,y,z and orientation as quaternion
+    :param target_position: The position to which the camera should point as a list of x,y,z and orientation as quaternion
+    :param size: The height and width of the images in pixel
+    :return: A list containing a RGB and depth image as well as a segmentation mask, in this order.
+    """
+    world, world_id = _world_and_id(world)
+    # TODO: Might depend on robot cameras, if so please add these camera parameters to RobotDescription object
+    # TODO: of your robot with a CameraDescription object.
+    fov = 90
+    aspect = size / size
+    near = 0.2
+    far = 100
+
+    view_matrix = p.computeViewMatrix(cam_position[0], target_position[0], [0, 0, 1])
+    projection_matrix = p.computeProjectionMatrixFOV(fov, aspect, near, far)
+    return list(p.getCameraImage(size, size, view_matrix, projection_matrix, physicsClientId=world_id))[2:5]
+
 
 def _get_seg_mask_for_target(target_position, cam_position, world=None):
     """

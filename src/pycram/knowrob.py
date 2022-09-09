@@ -1,5 +1,5 @@
 from json_prolog_msgs.srv import PrologQuery, PrologNextSolution, PrologFinish
-from knowrob_refills.knowrob_wrapper import KnowRob
+#from knowrob_refills.knowrob_wrapper import KnowRob
 from rosprolog_client import Prolog, PrologException
 from types import LambdaType
 import rospy
@@ -35,6 +35,23 @@ def get_pose_for_product_type(args):
             return pose['T'], pose['R']
     raise PrologException("No shelf position was found for the shelf the product is stored in.")
 
+def get_shelf_floor_for_product(args):
+    # Load sparql client to ensure it is loaded when sending the actual query
+    prolog.once("use_module(library('semweb/sparql_client')).")
+
+    sparq = Query(args)
+    print(sparq)
+    product_query = prolog.once(str(sparq))
+    print(product_query)
+    if product_query == []:
+        raise PrologException(f"{product_type} is not in the product taxonomy")
+
+    # The shelf returned by the taxonomy, this is not the same as the one in the belief state
+    shelf = product_query['Row']['term'][1].split('Shelf')[1]
+
+    shelf_floor = product_query['Row']['term'][2].split('Shelffloor')[1]
+    return shelf, shelf_floor
+
 
 
 class Query:
@@ -54,35 +71,38 @@ class Query:
     ADD_VAR: Additional variables that should be returned
     ORDER: How the return of the query should be ordered
     """
+    #?product owl:sameAs ?instance. \n \
+
     base_query = "sparql_query('PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n \
-    PREFIX loc: <http://knowrob.org/kg/location.owl#> \n \
+    PREFIX loc: <http://purl.org/NonFoodKG/location#> \n \
     ADD_PREFIX \n \
     PREFIX owl: <http://www.w3.org/2002/07/owl#> \n \
-    PREFIX tax: <http://knowrob.org/kb/product-taxonomy.owl#> \n \
-    select ?shelf ?shelf_floor ?instance ADD_VAR where{ \n \
+    PREFIX tax: <http://purl.org/NonFoodKG/product-taxonomy#> \n \
+    select ?shelf ?shelf_floor ADD_VAR where{ \n \
         ADD_QUERY \n \
         FILTER \n \
         ?product rdf:type tax:TYPE. \n \
-        ?product owl:sameAs ?instance. \n \
-        ?instance loc:stored_in ?shelf. \n \
-        ?instance loc:stored_on ?shelf_floor. \n \
+        ?product loc:stored_in ?shelf. \n \
+        ?product loc:stored_on ?shelf_floor. \n \
     } ORDER', Row, \n \
-    [ endpoint('https://api.krr.triply.cc/datasets/mkumpel/ProductCatalog/services/FoodToNonFood/sparql')])."
+    [ endpoint('https://api.krr.triply.cc/datasets/mkumpel/FoodToNonFoodKG/services/FoodToNonFood/sparql')])."
 
-    ingredient_query = "?prod in:has_ingredient ?ingredient. \n \
-                        ?ingredient rdf:type ?inclass. \n \
-                        ?prod owl:sameAs ?product."
+    ingredient_query = "?product in:has_ingredient ?ingredient. \n \
+                        ?ingredient rdf:type ?inclass."
     ingredient_filter = "FILTER(?inclass = in:ING) "
-    ingredient_prefix = "PREFIX in: <http://knowrob.org/kg/ingredients.owl#> \n "
+    ingredient_prefix = "PREFIX in: <http://purl.org/NonFoodKG/nonfoodingredient#> \n "
 
     price_query = "?instance loc:has_price ?price. \n "
 
-    brand_query = "?product owl:sameAs ?brandprod. \n"
+    brand_query = "?product gr:hasBrand brand:BRA. \n"
     store_brand_filter = "{?brandprod gr:hasBrand ?brand.} \n \
                         UNION \n \
                         {brand:BRA brand:StoreBrand ?brand.}"
-    brand_prefix = "PREFIX brand: <http://knowrob.org/kg/brandinfo.owl#> \n "
+    brand_prefix = "PREFIX brand: <http://purl.org/NonFoodKG/brandinfo#> \n "
     good_relations_prefix = "PREFIX gr: <http://purl.org/goodrelations/v1#>\n "
+
+    label_prefix = "PREFIX lbl: <http://purl.org/NonFoodKG/label#> \n"
+    label_query = "?product lbl:has_label lbl:LBL."
 
     recipes = {'ingredients' : {'ADD_QUERY': ingredient_query,
                                 'FILTER': ingredient_filter,
@@ -96,9 +116,16 @@ class Query:
                             'ADD_VAR': '?price',
                             'ORDER': lambda args: 'ORDER BY ?price' if args['price'] == 'cheapest' else ('ORDER BY DESC(?price)' if args['price'] == 'priciest' else '') },
                 'brand' : {'ADD_QUERY' : brand_query,
-                            'FILTER' : store_brand_filter,
+                            #'FILTER' : store_brand_filter,
+                            'FILTER': '',
                             'ADD_PREFIX' : brand_prefix + " " + good_relations_prefix,
                             'FILL_IN': 'BRA',
+                            'ADD_VAR': '',
+                            'ORDER': ''},
+                'label': {'ADD_QUERY' : label_query,
+                            'FILTER': '',
+                            'ADD_PREFIX' : label_prefix,
+                            'FILL_IN': 'LBL',
                             'ADD_VAR': '',
                             'ORDER': ''}}
 

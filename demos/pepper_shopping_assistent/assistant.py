@@ -1,4 +1,4 @@
-from pycram.knowrob import get_pose_for_product_type
+from pycram.knowrob import get_pose_for_product_type, get_shelf_floor_for_product
 from pycram.process_module import with_real_robot, real_robot, with_simulated_robot, simulated_robot
 from pycram.motion_designator import *
 from pycram.bullet_world import BulletWorld, Object
@@ -6,9 +6,12 @@ from pycram.ik import request_ik
 from navigation import navigation, nearest_wp
 from std_msgs.msg import String
 from pycram.robot_description import InitializedRobotDescription as robot_description
+from pycram.bullet_world import BulletWorld, Object
+from pycram.bullet_world_reasoning import _get_images_for_target
 from std_srvs.srv import Empty
-from pepper_behaviour_srvs.srv import Speak, MoveHead
+from pepper_behaviour_srvs.srv import Speak, MoveHead, Visualize
 from geometry_msgs.msg import PoseStamped
+from matplotlib.pyplot import imsave
 import numpy as np
 import pybullet as p
 import pepper_process_modules
@@ -17,10 +20,17 @@ import motion_desig_grounding
 import rospy
 import tf
 import time
-import moveit_commander
-import moveit_msgs.msg
+#import moveit_commander
+#import moveit_msgs.msg
 import sys
 import json
+import random
+
+world = BulletWorld()
+#shelves = Object("shleves", "environment", "/home/jdech/workspace/ros/src/pycram-1/resources/shelves.urdf")
+room = Object("shleves", "environment", "/home/jdech/workspace/ros/src/pycram-1/resources/room.urdf")
+item_box = Object("red_box", "object", "/home/jdech/workspace/ros/src/pycram-1/resources/box.urdf")
+shelf_box = Object("red_box", "object", "/home/jdech/workspace/ros/src/pycram-1/resources/shelf_box.urdf")
 
 @with_real_robot
 def assistant(product_args):
@@ -41,6 +51,7 @@ def assistant(product_args):
     tf_listener = tf.TransformListener()
     time.sleep(1)
     shelf_pose = get_pose_for_product_type(product_type)
+    print(shelf_pose)
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
     goal = nearest_wp(shelf_pose[0])
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
@@ -59,6 +70,26 @@ def app_callback(msg):
     """
     dict = json.loads(msg.data)
     assistant(dict)
+
+
+def vis_service(req):
+    dict = json.loads(req.product)
+    item_box.set_position([10, 10, 10])
+    #shelf_floor = get_shelf_floor_for_product(product_type)
+    shelf_number = 1
+    shelf_number_to_position = {1: [1, -1, 1]}
+    shelf_box.set_position(shelf_number_to_position[shelf_number])
+    img = _get_images_for_target([[1, -2, 0.], [0, 0, 0, 1]], [[1, -0.3, 5], [0, 0, 0, 1]], size=1024 )[0]
+    imsave("/home/jdech/workspace/pepper_tablet_app/static/images/vis_room.jpg", img)
+    shelf_box.set_position([-2, 2, 1])
+
+    shelf_floor = random.randint(1, 4)
+    shelf_floor_position = {0: 0.17, 1:0.46, 2:0.71, 3:0.95, 4:1.25, 5:1.5}
+    item_box.set_position_and_orientation([4, 3, shelf_floor_position[shelf_floor]], [0, 0, 1, 1])
+    img = _get_images_for_target([[4, 3, 1], [0, 0, 0, 1]], [[2.5, 3, 1], [0, 0, 0, 1]], size=1024 )[0]
+    item_box.set_position([-2, 2 , 1])
+    imsave("/home/jdech/workspace/pepper_tablet_app/static/images/vis.jpg", img)
+    return "/home/jdech/workspace/pepper_tablet_app/static/images/vis.jpg"
 
 @with_real_robot
 def point_to(goal_pose):
@@ -79,4 +110,5 @@ def point_to(goal_pose):
     #p.addUserDebugLine(shoulder_pose, goal_pose)
 
 # the ROS subscriber
+rospy.Service('/visualize_shelf', Visualize, vis_service)
 rospy.Subscriber('/assistant', String, app_callback)
