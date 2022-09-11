@@ -28,9 +28,9 @@ import random
 
 world = BulletWorld()
 #shelves = Object("shleves", "environment", "/home/jdech/workspace/ros/src/pycram-1/resources/shelves.urdf")
-room = Object("shleves", "environment", "/home/jdech/workspace/ros/src/pycram-1/resources/room.urdf")
-item_box = Object("red_box", "object", "/home/jdech/workspace/ros/src/pycram-1/resources/box.urdf")
-shelf_box = Object("red_box", "object", "/home/jdech/workspace/ros/src/pycram-1/resources/shelf_box.urdf")
+room = Object("shleves", "environment", "/home/jonas/workspace/ros/src/pycram-1/resources/room.urdf")
+item_box = Object("red_box", "object", "/home/jonas/workspace/ros/src/pycram-1/resources/box.urdf")
+shelf_box = Object("red_box", "object", "/home/jonas/workspace/ros/src/pycram-1/resources/shelf_box.urdf")
 
 @with_real_robot
 def assistant(product_args):
@@ -50,7 +50,7 @@ def assistant(product_args):
 
     tf_listener = tf.TransformListener()
     time.sleep(1)
-    shelf_pose = get_pose_for_product_type(product_type)
+    shelf_pose = get_pose_for_product_type(product_args)
     print(shelf_pose)
     robot_pose = tf_listener.lookupTransform('/map', '/base', rospy.Time(0))
     goal = nearest_wp(shelf_pose[0])
@@ -69,32 +69,35 @@ def app_callback(msg):
     and additional preferences.
     """
     dict = json.loads(msg.data)
+    #print(get_shelf_floor_for_product(dict))
     assistant(dict)
+
 
 
 def vis_service(req):
     dict = json.loads(req.product)
+    print(f"Viz: {dict}")
     item_box.set_position([10, 10, 10])
     #shelf_floor = get_shelf_floor_for_product(product_type)
-    shelf_number, shelf_floor =  get_shelf_floor_for_product(req.product)
+    shelf_number, shelf_floor =  get_shelf_floor_for_product(dict)
     shelf_number_to_position = {1: [1.8, -1.2, 1], 2:[0.8, -1.2, 1], 3:[-0.3, -1.2, 1],
                                 4:[-2.5, -0.8, 1], 5:[-2.5, -1.8], 6:[-2.5, -2.9, 1],
                                 7:[-2, -4, 1], 8:[-1, -4, 1], 9:[0, -4, 1], 10:[1, -4, 1],
                                 11:[2, -4, 1], 12:[3, -4, 1], 13:[-0.5, -2, 1], 14:[0.8, -2.1, 1],
                                 15:[1.8, -2.2, 1], 16:[4, -3, 1], 17:[4, -2, 1], 18:[4, -1, 1],
                                 19:[4, 0, 1] }
-    shelf_box.set_position(shelf_number_to_position[shelf_number])
+    shelf_box.set_position(shelf_number_to_position[int(shelf_number)])
     img = _get_images_for_target([[1, -2, 0.], [0, 0, 0, 1]], [[1, -0.3, 5], [0, 0, 0, 1]], size=1024 )[0]
-    imsave("/home/jdech/workspace/pepper_tablet_app/static/images/vis_room.jpg", img)
+    imsave("/home/jonas/workspace/pepper_tablet_app/static/images/vis_room.jpg", img)
     shelf_box.set_position([-2, 2, 1])
 
     #shelf_floor = random.randint(1, 4)
-    shelf_floor_position = {0: 0.17, 1:0.46, 2:0.71, 3:0.95, 4:1.25, 5:1.5}
-    item_box.set_position_and_orientation([4, 3, shelf_floor_position[shelf_floor]], [0, 0, 1, 1])
+    shelf_floor_position = {0: 0.17, 1:0.46, 2:0.71, 3:0.95, 4:1.25, 5:1.5, 6:1.75}
+    item_box.set_position_and_orientation([4, 3, shelf_floor_position[int(shelf_floor)]], [0, 0, 1, 1])
     img = _get_images_for_target([[4, 3, 1], [0, 0, 0, 1]], [[2.5, 3, 1], [0, 0, 0, 1]], size=1024 )[0]
     item_box.set_position([-2, 2 , 1])
-    imsave("/home/jdech/workspace/pepper_tablet_app/static/images/vis.jpg", img)
-    return "/home/jdech/workspace/pepper_tablet_app/static/images/vis.jpg"
+    imsave("/home/jonas/workspace/pepper_tablet_app/static/images/vis.jpg", img)
+    return "/home/jonas/workspace/pepper_tablet_app/static/images/vis.jpg"
 
 @with_real_robot
 def point_to(goal_pose):

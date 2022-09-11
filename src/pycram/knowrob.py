@@ -42,7 +42,7 @@ def get_shelf_floor_for_product(args):
     sparq = Query(args)
     print(sparq)
     product_query = prolog.once(str(sparq))
-    print(product_query)
+    #print(product_query)
     if product_query == []:
         raise PrologException(f"{product_type} is not in the product taxonomy")
 
@@ -87,12 +87,12 @@ class Query:
     } ORDER', Row, \n \
     [ endpoint('https://api.krr.triply.cc/datasets/mkumpel/FoodToNonFoodKG/services/FoodToNonFood/sparql')])."
 
-    ingredient_query = "?product in:has_ingredient ?ingredient. \n \
-                        ?ingredient rdf:type ?inclass."
+    ingredient_query = "?product in:has_ingredient in:ING."
+                        #?ingredient rdf:type ?inclass."
     ingredient_filter = "FILTER(?inclass = in:ING) "
     ingredient_prefix = "PREFIX in: <http://purl.org/NonFoodKG/nonfoodingredient#> \n "
 
-    price_query = "?instance loc:has_price ?price. \n "
+    price_query = "?product loc:has_price ?price. \n "
 
     brand_query = "?product gr:hasBrand brand:BRA. \n"
     store_brand_filter = "{?brandprod gr:hasBrand ?brand.} \n \
@@ -105,7 +105,7 @@ class Query:
     label_query = "?product lbl:has_label lbl:LBL."
 
     recipes = {'ingredients' : {'ADD_QUERY': ingredient_query,
-                                'FILTER': ingredient_filter,
+                                'FILTER': '',
                                 'ADD_PREFIX': ingredient_prefix,
                                 'FILL_IN': 'ING',
                                 'ADD_VAR': '',
