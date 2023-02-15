@@ -65,10 +65,11 @@ class BulletWorld:
         self.coll_callbacks: Dict[Tuple[Object, Object], Tuple[Callable, Callable]] = {}
         self.data_directory: List[str] = [os.path.dirname(__file__) + "/../../resources"]
         self.shadow_world: BulletWorld = BulletWorld("DIRECT", True) if not is_shadow_world else None
-        self.world_sync: World_Sync = World_Sync(self, self.shadow_world) if not is_shadow_world else None
         self.is_shadow_world: bool = is_shadow_world
         if not is_shadow_world:
+            self.world_sync: World_Sync = World_Sync(self, self.shadow_world) if not is_shadow_world else None
             self.world_sync.start()
+        self.debug_param_threads = []
 
         # Some default settings
         self.set_gravity([0, 0, -9.8])
@@ -129,6 +130,9 @@ class BulletWorld:
             self._gui_thread.join()
         if BulletWorld.current_bullet_world == self:
             BulletWorld.current_bullet_world = None
+        for thread in self.debug_param_threads:
+            thread.terminate = True
+            thread.join()
 
 
     def save_state(self) -> int:
@@ -240,6 +244,13 @@ class BulletWorld:
             rospy.logerr("The given object is not in the shadow world")
 
 
+    def remove_all_parameter(self):
+        for thread in self.debug_param_threads:
+            thread.terminate = True
+            thread.join()
+        self.debug_param_threads = []
+        p.removeAllUserParameters()
+
 
 #current_bullet_world = BulletWorld.current_bullet_world
 
@@ -256,6 +267,36 @@ class Use_shadow_world():
     def __exit__(self, *args):
         BulletWorld.current_bullet_world = self.prev_world
         BulletWorld.current_bullet_world.world_sync.pause_sync = False
+
+
+class JointParams(threading.Thread):
+    def __init__(self, object):
+        threading.Thread.__init__(self)
+        self.world = BulletWorld.current_bullet_world
+        self.object = object
+        self.param_values = {}
+        self.param_ids = {}
+        self.terminate = False
+        self.world.debug_param_threads.append(self)
+        for joint, index in object.joints.items():
+            joint_info = p.getJointInfo(object.id, index, BulletWorld.current_bullet_world.client_id)
+            if joint_info[2] == p.JOINT_FIXED:
+                continue
+            lower, upper = joint_info[8:10]
+            if upper < lower:
+                lower, upper = upper, lower
+            joint_state = object.get_joint_state(joint)
+            self.param_ids[joint] = p.addUserDebugParameter(joint, lower, upper, joint_state)
+            self.param_values[joint] = joint_state
+        self.start()
+
+
+    def run(self):
+        while not self.terminate:
+            for param in self.param_values.keys():
+                if p.readUserDebugParameter(self.param_ids[param]) != self.param_values[param]:
+                    self.object.set_joint_state(param, p.readUserDebugParameter(self.param_ids[param]))
+            time.sleep(0.1)
 
 
 class World_Sync(threading.Thread):
@@ -665,6 +706,12 @@ class Object:
         Returns the axis aligned bounding box of the given link name
         """
         return p.getAABB(self.id, self.links[link_name], self.world.client_id)
+
+    def get_full_joint_state(self):
+        joint_state = {}
+        for joint in self.joints.keys():
+            joint_state[joint] = self.get_joint_state(joint)
+        return joint_state
 
 
 
