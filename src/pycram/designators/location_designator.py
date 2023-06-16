@@ -8,7 +8,7 @@ from ..costmaps import OccupancyCostmap, VisibilityCostmap, SemanticCostmap, Gau
 from pycram.robot_descriptions.robot_description_handler import InitializedRobotDescription as robot_description
 from ..helper import transform
 from ..pose_generator_and_validator import pose_generator, visibility_validator, reachability_validator
-
+import time
 
 class LocationDesignatorDescription(DesignatorDescription):
     """
@@ -180,6 +180,9 @@ class CostmapLocation(LocationDesignatorDescription):
         occupancy = OccupancyCostmap(0.4, False, 200, 0.02, [ground_pose[0], [0, 0, 0, 1]],
                                      BulletWorld.current_bullet_world)
         final_map = occupancy
+        final_map.visualize()
+        time.sleep(5)
+        final_map.close_visualization()
 
         if self.reachable_for:
             gaussian = GaussianCostmap(200, 15, 0.02, [ground_pose[0], [0, 0, 0, 1]])
