@@ -128,6 +128,10 @@ class CostmapLocation(LocationDesignatorDescription):
         """
         List of arms with which the pose can be reached, is only used when the 'rechable_for' parameter is used
         """
+        torso_height: float
+        """
+        Height of the torso joint that is needed for reachability
+        """
 
     def __init__(self, target, reachable_for=None, visible_for=None, reachable_arm=None, resolver=None):
         """
@@ -220,7 +224,7 @@ class CostmapLocation(LocationDesignatorDescription):
                             res = res and valid
 
                     if res:
-                        yield self.Location(list(maybe_pose), arms)
+                        yield self.Location(list(maybe_pose), arms, torso_height)
             i += 1
 
 
