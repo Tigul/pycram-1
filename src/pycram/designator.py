@@ -311,6 +311,8 @@ class DesignatorDescription(ABC):
 
         if resolver is None:
             self.resolve = self.ground
+        else:
+            self.resolve = lambda: resolver(self)
 
     def make_dictionary(self, properties: List[str]):
         """
