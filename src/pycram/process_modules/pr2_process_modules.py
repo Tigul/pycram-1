@@ -233,7 +233,6 @@ class Pr2MoveArmJoints(ProcessModule):
     """
 
     def _execute(self, desig: MoveArmJointsMotion.Motion):
-
         robot = BulletWorld.robot
         if desig.right_arm_poses:
             for joint, pose in desig.right_arm_poses.items():
