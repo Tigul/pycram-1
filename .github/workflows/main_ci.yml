@@ -28,6 +28,8 @@ on:
 jobs:
   build_dependencies:
     uses: ./.github/workflows/setup_dependencies.yml
+    with:
+      robot: pr2
   execute_test:
     needs: [ build_dependencies ]
     runs-on: ubuntu-20.04
