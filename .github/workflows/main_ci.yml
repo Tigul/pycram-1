@@ -33,10 +33,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: start roscore
-        run: roscore &
-      - if: ${{ (always()) && (runner.debug == '1') }}
-        name: Setup upterm session
-        uses: lhotari/action-upterm@v1
+        run: roslaunch pycram ik_and_description &
       - name: Run Tests
         run: |
           roscd pycram
