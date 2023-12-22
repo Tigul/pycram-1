@@ -1,0 +1,45 @@
+name: CI standalone
+defaults:
+  run:
+    shell: bash -ieo pipefail {0}
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+      - devel
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'info'
+        type: choice
+        options:
+          - info
+          - warning
+          - debug
+      tags:
+        description: 'Test scenario tags'
+        required: false
+        type: boolean
+jobs:
+  build_dependencies:
+    uses: ./.github/workflows/setup_dependencies.yml
+  execute_test:
+    needs: [ build_dependencies ]
+    runs-on: ubuntu-20.04
+    steps:
+      - name: start roscore
+        run: roscore &
+      - if: ${{ (always()) && (runner.debug == '1') }}
+        name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+      - name: Run Tests
+        run: |
+          roscd pycram
+          python3 -m unittest discover test
+
+      
