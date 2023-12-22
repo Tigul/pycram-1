@@ -49,7 +49,7 @@ jobs:
         path: 'ros_ws/src/pr2_kinematics'
         repository: PR2/pr2_kinematics
         ref: master
-    - name: build and source
+    - name: install ros and deps
       uses: betwo/github-setup-catkin@master
       env:
         ACTIONS_ALLOW_UNSECURE_COMMANDS: true
@@ -59,6 +59,7 @@ jobs:
         build-tool: 'catkin_tools'
         # Root directory of the catkin workspace
         workspace: $GITHUB_WORKSPACE/ros_ws
+    - name: build and source workspace
       run: | 
         cd ros_ws
         catkin_make
