@@ -38,7 +38,7 @@ jobs:
         run: roslaunch pycram ik_and_description &
       - name: Run Tests
         run: |
-          roscd pycram
+          cd $GITHUB_WORKSPACE/ros_ws/src/pycram
           python3 -m unittest discover test
 
       
