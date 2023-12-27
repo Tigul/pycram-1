@@ -84,6 +84,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/ros_ws/src/pycram
           sudo pip3 install -r requirements.txt
+      - name: upgrade numpy
+        run: |
+          sudo pip3 install --upgrade numpy
       - name: start roscore
         run: |
               roslaunch pycram ik_and_description &
