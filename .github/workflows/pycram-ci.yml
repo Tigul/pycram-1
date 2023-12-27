@@ -33,10 +33,7 @@ jobs:
         with:
           path: 'ros_ws/src/pycram'
           repository: cram2/pycram
-      - name: Install requirements
-        run: |
-          cd $GITHUB_WORKSPACE/ros_ws/src/pycram
-          sudo pip3 install -r requirements.txt
+
       - name: Checkout iai_maps
         uses: actions/checkout@v3
         with:
@@ -83,6 +80,10 @@ jobs:
           catkin_make
           echo 'export ROS_HOSTNAME=localhost' >> ~/.bashrc
           echo 'source $GITHUB_WORKSPACE/ros_ws/devel/setup.bash' >> ~/.bashrc
+      - name: Install requirements
+        run: |
+          cd $GITHUB_WORKSPACE/ros_ws/src/pycram
+          sudo pip3 install -r requirements.txt
       - name: start roscore
         run: |
               roslaunch pycram ik_and_description &
