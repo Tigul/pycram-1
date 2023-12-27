@@ -83,14 +83,10 @@ jobs:
           catkin_make
           echo 'export ROS_HOSTNAME=localhost' >> ~/.bashrc
           echo 'source $GITHUB_WORKSPACE/ros_ws/devel/setup.bash' >> ~/.bashrc
-  execute_test:
-      needs: [ build ]
-      runs-on: ubuntu-20.04
-      steps:
-          - name: start roscore
-            run: |
+      - name: start roscore
+        run: |
               roslaunch pycram ik_and_description &
-          - name: Run Tests
-            run: |
-              cd $GITHUB_WORKSPACE/ros_ws/src/pycram
-              python3 -m unittest discover test
+      - name: Run Tests
+        run: |
+          roscd pycram
+          python3 -m unittest discover test
