@@ -362,3 +362,4 @@ def link_pose_for_joint_config(object: Object, joint_config: Dict[str, float], l
         for joint, pose in joint_config.items():
             shadow_object.set_joint_state(joint, pose)
         return shadow_object.get_link_pose(link_name)
+
