@@ -89,7 +89,7 @@ jobs:
           sudo pip3 install --upgrade numpy
       - name: start roscore
         run: |
-              roslaunch pycram ik_and_description.launch &
+              roslaunch pycram ci_setup.launch &
       - name: Run Tests
         run: |
           roscd pycram
