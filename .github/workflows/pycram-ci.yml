@@ -34,6 +34,7 @@ jobs:
           path: 'ros_ws/src/pycram'
           repository: Tigul/pycram-1
           ref: test-ci
+          submodules: recursive
 
       - name: Checkout iai_maps
         uses: actions/checkout@v3
