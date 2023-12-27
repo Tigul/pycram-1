@@ -8,7 +8,7 @@
   <group if="$(eval robot == 'pr2')">
     <include file="$(find pr2_arm_kinematics)/launch/pr2_ik_larm_node.launch"/>
     <include file="$(find pr2_arm_kinematics)/launch/pr2_ik_rarm_node.launch"/>
-    <param name="robot_pr2_description"
+    <param name="robot_description"
         textfile="$(find pycram)/resources/pr2.urdf"/>
   </group>
   <!-- Boxy -->
