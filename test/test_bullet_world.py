@@ -52,7 +52,8 @@ class XMLTester(unittest.TestCase):
     def setUp(self) -> None:
         rospack = rospkg.RosPack()
         filename = rospack.get_path('pycram') + '/resources/' + 'pr2.urdf'
-        self.urdf_string = open(filename, "r").read()
+        with open(filename, "r") as f:
+            self.urdf_string = f.read()
 
     def test_inertial(self):
         result = fix_missing_inertial(self.urdf_string)
