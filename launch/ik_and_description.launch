@@ -8,9 +8,8 @@
   <group if="$(eval robot == 'pr2')">
     <include file="$(find pr2_arm_kinematics)/launch/pr2_ik_larm_node.launch"/>
     <include file="$(find pr2_arm_kinematics)/launch/pr2_ik_rarm_node.launch"/>
-    <param name="robot_description"
-           command="$(find xacro)/xacro
-                    '$(find pr2_description)/robots/pr2.urdf.xacro'"/>
+     <param name="robot_description"
+        textfile="$(find pycram)/resources/pr2.urdf"/>
   </group>
   <!-- Boxy -->
   <group if="$(eval robot == 'boxy')">
