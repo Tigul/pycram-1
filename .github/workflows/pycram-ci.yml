@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           path: 'ros_ws/src/pycram'
-          repository: cram2/pycram
+          repository: Tigul/pycram-1
           ref: test-ci
 
       - name: Checkout iai_maps
