@@ -95,5 +95,19 @@ jobs:
       - name: Run Tests
         run: |
           roscd pycram
-          python3 -m unittest discover -v test
+          # python3 -m unittest discover -v test
+          python3 test/test_action_designator.py
+          python3 test/local_transformer_tests.py
+          python3 test/test_bullet_world.py
+          python3 test/test_bullet_world_reasoning.py
+          python3 test/test_costmaps.py
+          python3 test/test_database_resolver.py
+          python3 test/test_giskard.py
+          python3 test/test_jpt_resolver.py
+          python3 test/test_location_designator.py
+          python3 test/test_object_designator.py
+          python3 test/test_orm.py
+          python3 test/test_pose.py
+          python3 test/test_task_tree.py
+          
           # python3 test/test_action_designator.py
