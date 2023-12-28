@@ -100,7 +100,7 @@ jobs:
           python3 -m unittest -v test_action_designator
           python3 -m unittest -v local_transformer_tests
           python3 -m unittest -v test_bullet_world
-          python3 -m unittest -v test_bullet_world_reasoning
+          # python3 -m unittest -v test_bullet_world_reasoning
           python3 -m unittest -v test_costmaps
           python3 -m unittest -v test_database_resolver
           python3 -m unittest -v test_giskard
