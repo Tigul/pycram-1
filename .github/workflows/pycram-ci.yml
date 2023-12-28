@@ -96,4 +96,4 @@ jobs:
         run: |
           roscd pycram
           # python3 -m unittest discover test
-          python3 test/test_location_designator.py
+          python3 test/local_transformer_tests.py
