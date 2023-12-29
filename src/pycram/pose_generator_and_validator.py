@@ -106,7 +106,7 @@ def visibility_validator(pose: Pose,
         camera_pose = robot.get_link_pose(robot_description.get_camera_frame())
         robot.set_pose(Pose([100, 100, 0], [0, 0, 0, 1]))
         ray = p.rayTest(camera_pose.position_as_list(), object_or_pose, physicsClientId=world.client_id)
-        res = ray[0][0] == -1 or ray[0][0] == 0
+        res = ray[0][0] == -1 or ray[0][0] == robot.id
     robot.set_pose(robot_pose)
     return res
 
