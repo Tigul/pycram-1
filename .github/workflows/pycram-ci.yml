@@ -89,14 +89,17 @@ jobs:
       - name: upgrade numpy
         run: |
           sudo pip3 install --upgrade numpy
+      - name: install pytest
+        run: |
+          sudo pip3 install pytest
       - name: start roscore
         run: |
           roslaunch pycram ci_setup.launch &
       - name: Run Tests
         run: |
           roscd pycram
-          
-          python3 -m unittest discover -v test
+          pytest -v test
+          #python3 -m unittest discover -v test
           
           #cd test
           #python3 -m unittest -v test_action_designator
