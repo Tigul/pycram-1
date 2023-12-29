@@ -1,4 +1,3 @@
-import time
 import unittest
 from pycram.designators.location_designator import *
 from pycram.designators import action_designator, object_designator
@@ -38,7 +37,6 @@ class TestActionDesignatorGrounding(test_bullet_world.BulletWorldTest):
         self.assertTrue(len(location.pose.orientation_as_list()) == 4)
 
     def test_reachability_and_visibility(self):
-        self.robot.set_joint_states(robot_description.get_static_joint_chain("right", "park"))
         self.robot.set_joint_state(robot_description.torso_joint, 0.3)
         object_desig = ObjectDesignatorDescription(names=["milk"])
         robot_desig = ObjectDesignatorDescription(names=[robot_description.name])

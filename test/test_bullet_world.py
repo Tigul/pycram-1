@@ -1,4 +1,3 @@
-import time
 import unittest
 
 import numpy as np
@@ -19,7 +18,6 @@ class BulletWorldTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        print("setting up")
         cls.world = BulletWorld("DIRECT")
         cls.robot = Object(robot_description.name, ObjectType.ROBOT, robot_description.name + ".urdf")
         cls.kitchen = Object("kitchen", ObjectType.ENVIRONMENT, "kitchen.urdf")

@@ -13,19 +13,17 @@ from pycram.robot_descriptions import robot_description
 from pycram.pose import Pose
 
 # check if jpt is installed
-jpt_installed = False
+jpt_installed = True
 try:
     import jpt
     from pycram.resolver.location.jpt_location import JPTCostmapLocation
-    jpt_installed = True
 except ImportError:
     jpt_installed = False
 
 # check if mlflow is installed
-mlflow_installed = False
+mlflow_installed = True
 try:
     import mlflow
-    mlflow_installed = True
 except ImportError:
     mlflow_installed = False
 
@@ -38,10 +36,10 @@ try:
 except requests.exceptions.ConnectionError:
     response = None
 
-print(mlflow_installed, jpt_installed, response)
+
+@unittest.skipIf(response is None or (response.status_code != requests.codes.ok), "mlflow server is not available.")
 @unittest.skipIf(not jpt_installed, "jpt is not installed. Install via 'pip install pyjpt'")
 @unittest.skipIf(not mlflow_installed, "mlflow is not installed. Install via 'pip install mlflow'")
-@unittest.skipIf(response is None or (response.status_code != requests.codes.ok), "mlflow server is not available.")
 class JPTResolverTestCase(unittest.TestCase):
     world: BulletWorld
     milk: Object

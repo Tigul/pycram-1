@@ -183,6 +183,7 @@ class CostmapLocation(LocationDesignatorDescription):
             test_robot = BulletWorld.current_bullet_world.get_shadow_object(robot_object)
 
         with Use_shadow_world():
+
             for maybe_pose in pose_generator(final_map, number_of_samples=600):
                 res = True
                 arms = None
@@ -196,11 +197,11 @@ class CostmapLocation(LocationDesignatorDescription):
                             hand_links += chain.gripper.links
                     valid, arms = reachability_validator(maybe_pose, test_robot, target_pose,
                                                          allowed_collision={test_robot: hand_links})
-
                     if self.reachable_arm:
                         res = res and valid and self.reachable_arm in arms
                     else:
                         res = res and valid
+
                 if res:
                     yield self.Location(maybe_pose, arms)
 
