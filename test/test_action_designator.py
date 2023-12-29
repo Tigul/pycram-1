@@ -10,7 +10,6 @@ import test_bullet_world
 import numpy as np
 
 
-@unittest.skip
 class TestActionDesignatorGrounding(test_bullet_world.BulletWorldTest):
     """Testcase for the grounding methods of action designators."""
 
