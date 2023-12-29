@@ -96,7 +96,7 @@ jobs:
         run: |
           roscd pycram
           
-          # python3 -m unittest discover -v test
+          python3 -m unittest discover -v test
           
           #cd test
           #python3 -m unittest -v test_action_designator
