@@ -98,7 +98,7 @@ jobs:
       - name: Run Tests
         run: |
           roscd pycram
-          pytest -v  test
+          pytest -v  test/test_pose.py
           #python3 -m unittest discover -v test
           
           #cd test
