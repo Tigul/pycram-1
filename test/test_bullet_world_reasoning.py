@@ -33,10 +33,12 @@ class TestBulletWorldReasoning(BulletWorldTest):
         self.assertFalse(btr.reachable(Pose([2, 2, 1]), self.robot, robot_description.get_tool_frame("right")))
 
     def test_blocking(self):
+        print("start blocking test")
         self.milk.set_pose(Pose([0.5, -0.7, 1]))
         self.robot.set_pose(Pose())
         time.sleep(1)
         self.assertTrue(btr.blocking(Pose([0.5, -0.7, 1]), self.robot, robot_description.get_tool_frame("right")) != [])
+        print("end blocking test")
 
     def test_supporting(self):
         self.milk.set_pose(Pose([1.3, 0, 0.9]))
