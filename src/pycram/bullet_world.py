@@ -79,7 +79,8 @@ class BulletWorld:
         p.setPhysicsEngineParameter(enableFileCaching=0)
         # Needed to let the other thread start the simulation, before Objects are spawned.
         time.sleep(0.1)
-        if BulletWorld.current_bullet_world == None:
+        #if BulletWorld.current_bullet_world == None:
+        if not is_shadow_world:
             BulletWorld.current_bullet_world = self
         self.vis_axis: Object = []
         self.coll_callbacks: Dict[Tuple[Object, Object], Tuple[Callable, Callable]] = {}
@@ -215,8 +216,8 @@ class BulletWorld:
         p.disconnect(self.client_id)
         if self._gui_thread:
             self._gui_thread.join()
-        if BulletWorld.current_bullet_world == self:
-            BulletWorld.current_bullet_world = None
+        #if BulletWorld.current_bullet_world == self:
+        BulletWorld.current_bullet_world = None
         BulletWorld.robot = None
 
     def save_state(self) -> int:
