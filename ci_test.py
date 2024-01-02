@@ -10,3 +10,5 @@ apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
 with simulated_robot:
     ParkArmsAction([Arms.BOTH]).resolve().perform()
+
+world.exit()
