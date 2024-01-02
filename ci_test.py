@@ -6,8 +6,11 @@ from pycram.process_module import simulated_robot
 from pycram.bullet_world_reasoning import *
 
 world = BulletWorld("DIRECT")
+print("world created")
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
+print("robot created")
 milk = Object("milk", ObjectType.MILK, "milk.stl", pose=Pose([1.3, 1, 0.9]))
+print("milk created")
 print("before apartment")
 apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
