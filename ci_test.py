@@ -5,6 +5,7 @@ from pycram.designators.object_designator import *
 from pycram.process_module import simulated_robot
 from pycram.bullet_world_reasoning import *
 
+print("before world")
 world = BulletWorld("DIRECT")
 print("world created")
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
