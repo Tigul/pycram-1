@@ -9,6 +9,10 @@ robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
 apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
 with simulated_robot:
-    ParkArmsAction([Arms.BOTH]).resolve().perform()
+    with Use_shadow_world():
+        ParkArmsAction([Arms.BOTH]).resolve().perform()
+
+print("-" * 50)
+print("done")
 
 world.exit()
