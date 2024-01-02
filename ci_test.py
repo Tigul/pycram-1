@@ -8,7 +8,7 @@ from pycram.bullet_world_reasoning import *
 world = BulletWorld("DIRECT")
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
 milk = Object("milk", ObjectType.MILK, "milk.stl", pose=Pose([1.3, 1, 0.9]))
-
+print("before apartment")
 apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
 print("start blocking test")
