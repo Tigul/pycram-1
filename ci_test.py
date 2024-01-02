@@ -3,14 +3,19 @@ from pycram.enums import ObjectType
 from pycram.designators.action_designator import *
 from pycram.designators.object_designator import *
 from pycram.process_module import simulated_robot
+from pycram.bullet_world_reasoning import *
 
 world = BulletWorld("DIRECT")
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
+milk = Object("milk", ObjectType.MILK, "milk.stl", pose=Pose([1.3, 1, 0.9]))
 apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
-with simulated_robot:
-    with Use_shadow_world():
-        ParkArmsAction([Arms.BOTH]).resolve().perform()
+print("start blocking test")
+milk.set_pose(Pose([0.5, -0.7, 1]))
+robot.set_pose(Pose())
+time.sleep(1)
+blocking(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
+print("end blocking test")
 
 print("-" * 50)
 print("done")
