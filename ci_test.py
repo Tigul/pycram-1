@@ -9,7 +9,7 @@ world = BulletWorld("DIRECT")
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
 milk = Object("milk", ObjectType.MILK, "milk.stl", pose=Pose([1.3, 1, 0.9]))
 
-#apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
+apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
 print("start blocking test")
 #milk.set_pose(Pose([0.5, -0.7, 1]))
