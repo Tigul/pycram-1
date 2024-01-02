@@ -12,9 +12,13 @@ apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
 print("start blocking test")
 milk.set_pose(Pose([0.5, -0.7, 1]))
+print("move milk")
 robot.set_pose(Pose())
+print("move robot")
 time.sleep(1)
+print("sleep")
 blocking(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
+print("test blocking")
 print("end blocking test")
 
 print("-" * 50)
