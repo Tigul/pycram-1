@@ -32,10 +32,11 @@ print("sleep")
 #blocking(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
 #reachable(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
 shadow_robot = world.get_shadow_object(robot)
-with Use_shadow_world():
-    shadow_robot.set_pose(Pose([1,2,0]))
-    shadow_robot.set_pose(Pose([0,0,0]))
-    MoveTCPMotion(Pose([0.5, -0.7, 1])).resolve().perform()
+with simulated_robot:
+    with Use_shadow_world():
+        shadow_robot.set_pose(Pose([1,2,0]))
+        shadow_robot.set_pose(Pose([0,0,0]))
+        MoveTCPMotion(Pose([0.5, -0.7, 1])).resolve().perform()
 print("test blocking")
 print("end blocking test")
 
