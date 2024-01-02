@@ -37,6 +37,13 @@ with simulated_robot:
     with Use_shadow_world():
         shadow_robot.set_pose(Pose([1,2,0]))
         shadow_robot.set_pose(Pose([0,0,0]))
+        if robot_description.name == "pr2":
+            ik_service = "/pr2_right_arm_kinematics/get_ik" if "r_wrist" in tip_link else "/pr2_left_arm_kinematics/get_ik"
+        else:
+            ik_service = "/kdl_ik_service/get_ik"
+
+        rospy.wait_for_service(ik_service)
+
         #request_ik(Pose([0.5, -0.7, 1]), robot, robot_description.chains["right"].joints, robot_description.get_tool_frame("right"))
         #MoveTCPMotion(Pose([0.5, -0.7, 1])).resolve().perform()
 print("test blocking")
