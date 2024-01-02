@@ -1,3 +1,7 @@
+print("start of file")
+from pycram.robot_descriptions import robot_description
+print("after robot description")
+
 from pycram.bullet_world import BulletWorld, Object, Use_shadow_world
 from pycram.enums import ObjectType
 from pycram.designators.action_designator import *
