@@ -17,7 +17,7 @@ print("robot created")
 milk = Object("milk", ObjectType.MILK, "milk.stl", pose=Pose([1.3, 1, 0.9]))
 print("milk created")
 print("before apartment")
-#apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
+apartement = Object("apartement", ObjectType.ENVIRONMENT, "apartment.urdf")
 
 print("start blocking test")
 #milk.set_pose(Pose([0.5, -0.7, 1]))
