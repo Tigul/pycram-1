@@ -1,3 +1,5 @@
+import rospy
+
 print("start of file")
 from pycram.robot_descriptions import robot_description
 print("after robot description")
@@ -10,6 +12,7 @@ from pycram.process_module import simulated_robot
 from pycram.bullet_world_reasoning import *
 
 print("before world")
+rospy.logwarn("before world")
 world = BulletWorld("DIRECT")
 print("world created")
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
@@ -26,7 +29,7 @@ robot.set_pose(Pose())
 print("move robot")
 time.sleep(1)
 print("sleep")
-#blocking(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
+blocking(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
 print("test blocking")
 print("end blocking test")
 
