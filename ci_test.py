@@ -26,7 +26,7 @@ robot.set_pose(Pose())
 print("move robot")
 time.sleep(1)
 print("sleep")
-blocking(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
+#blocking(Pose([0.5, -0.7, 1]), robot, robot_description.get_tool_frame("right"))
 print("test blocking")
 print("end blocking test")
 
