@@ -65,7 +65,7 @@ jobs:
         with:
           path: 'ros_ws/src/pr2_kinematics'
           repository: PR2/pr2_kinematics
-          ref: master
+          ref: kinetic-devel
       - name: install ros and deps
         uses: betwo/github-setup-catkin@master
         env:
@@ -94,7 +94,7 @@ jobs:
           sudo pip3 install pytest
       - name: start roscore
         run: |
-          roslaunch pycram ik_and_description.launch & 
+          roslaunch pycram ik_and_description.launch &
       - name: Run Tests
         run: |
           roscd pycram
