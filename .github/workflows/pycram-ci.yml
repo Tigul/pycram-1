@@ -92,6 +92,9 @@ jobs:
       - name: install pytest
         run: |
           sudo pip3 install pytest
+      - name: print base_ref
+        run : |
+          echo ${{ github.base_ref }}
       - name: start roscore
         run: |
           roslaunch pycram ik_and_description.launch &

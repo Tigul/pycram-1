@@ -126,7 +126,7 @@ class PoseMixin:
         return relationship(Pose.__tablename__, init=False)
 
 
-class ProcessMetaData(MappedAsDataclass, _Base):
+class ProcessMeta1Data(MappedAsDataclass, _Base):
     """
     ProcessMetaData stores information about the context of this experiment.
 
