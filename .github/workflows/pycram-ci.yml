@@ -6,30 +6,19 @@ on:
   push:
     branches:
       - test-ci
+      - dev
+      - master
   pull_request:
     branches:
       - master
-      - devel
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'
-        required: true
-        default: 'info'
-        type: choice
-        options:
-          - info
-          - warning
-          - debug
-      tags:
-        description: 'Test scenario tags'
-        required: false
-        type: boolean
+      - dev
+      - test-ci
 jobs:
   Build_and_run_Tests:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout pycram
+        uses: actions/checkout@v3
         with:
           path: 'ros_ws/src/pycram'
           repository: ${{github.repository}}
@@ -92,10 +81,6 @@ jobs:
       - name: install pytest
         run: |
           sudo pip3 install pytest
-      - name: print base_ref
-        run : |
-          echo $GITHUB_REPOSITORY
-          echo $GITHUB_REF_NAME
       - name: start roscore
         run: |
           roslaunch pycram ik_and_description.launch &
