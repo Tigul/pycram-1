@@ -98,8 +98,8 @@ jobs:
       - name: Run Tests
         run: |
           roscd pycram
-          python3 ci_test.py
-          #pytest -v  test/test_action_designator.py
+          #python3 ci_test.py
+          pytest -v test
          
           #python3 -m unittest discover -v test 
           #cd test
