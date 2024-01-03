@@ -78,31 +78,13 @@ jobs:
       - name: upgrade numpy
         run: |
           sudo pip3 install --upgrade numpy
-      - name: install pytest
+      - name: install additional requirements
         run: |
-          sudo pip3 install pytest
+          sudo pip3 install pytest pyjpt mlflow
       - name: start roscore
         run: |
           roslaunch pycram ik_and_description.launch &
       - name: Run Tests
         run: |
           roscd pycram
-          #python3 ci_test.py
           pytest -v test
-         
-          #python3 -m unittest discover -v test 
-          #cd test
-          #python3 -m unittest -v test_action_designator
-          #python3 -m unittest -v local_transformer_tests
-          #python3 -m unittest -v test_bullet_world
-          ## python3 -m unittest -v test_bullet_world_reasoning
-          #python3 -m unittest -v test_costmaps
-          #python3 -m unittest -v test_database_resolver
-          #python3 -m unittest -v test_giskard
-          #python3 -m unittest -v test_jpt_resolver
-          #echo "test_location_designator"
-          ## python3 -m unittest -v test_location_designator
-          #python3 -m unittest -v test_object_designator
-          #python3 -m unittest -v test_orm
-          #python3 -m unittest -v test_pose
-          #python3 -m unittest -v test_task_tree
