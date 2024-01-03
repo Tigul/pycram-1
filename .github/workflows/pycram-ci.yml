@@ -81,6 +81,9 @@ jobs:
       - name: install pytest
         run: |
           sudo pip3 install pytest
+      - name: test for PR
+        run: |
+          echo "---------------------------------------------------------------------------"
       - name: start roscore
         run: |
           roslaunch pycram ik_and_description.launch &
