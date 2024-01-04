@@ -1,6 +1,6 @@
 import rospy
 
-from src.pycram.local_transformer import LocalTransformer
+from pycram.local_transformer import LocalTransformer
 from pycram.pose import Pose, Transform
 from bullet_world_testcase import BulletWorldTestCase
 
