@@ -10,6 +10,7 @@ from sqlalchemy.orm.session import Session
 import rospy
 
 from .bullet_world import (Object as BulletWorldObject, BulletWorld)
+from .enums import ObjectType
 from .helper import GeneratorList, bcolors
 from threading import Lock
 from time import time
@@ -714,26 +715,7 @@ class ObjectDesignatorDescription(DesignatorDescription):
                     return pose_in_object
             return pose
 
-        # def special_knowledge(self, grasp, pose):
-        #     """
-        #     Returns t special knowledge for "grasp front".
-        #     """
-        #
-        #     special_knowledge = []  # Initialize as an empty list
-        #     if self.type in SPECIAL_KNOWLEDGE:
-        #         special_knowledge = SPECIAL_KNOWLEDGE[self.type]
-        #
-        #     for key, value in special_knowledge:
-        #         if key == grasp:
-        #             # Adjust target pose based on special knowledge
-        #             pose.pose.position.x += value[0]
-        #             pose.pose.position.y += value[1]
-        #             pose.pose.position.z += value[2]
-        #             print("Adjusted target pose based on special knowledge for grasp: ", grasp)
-        #             return pose
-        #     return pose
-
-    def __init__(self, names: Optional[List[str]] = None, types: Optional[List[str]] = None,
+    def __init__(self, names: Optional[List[str]] = None, types: Optional[List[ObjectType]] = None,
                  resolver: Optional[Callable] = None):
         """
         Base of all object designator descriptions. Every object designator has the name and type of the object.

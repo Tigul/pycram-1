@@ -10,6 +10,7 @@ from pycram.failure_handling import Retry
 from pycram.plan_failures import PlanFailure
 from pycram.process_module import ProcessModule, simulated_robot
 from pycram.robot_descriptions import robot_description
+from bullet_world_testcase import BulletWorldTestCase
 
 
 # start ik_and_description.launch
@@ -23,18 +24,8 @@ class DummyActionDesignator(ActionDesignatorDescription):
             yield self.Action()
 
 
-class FailureHandlingTest(unittest.TestCase):
-    world: BulletWorld
+class FailureHandlingTest(BulletWorldTestCase):
     process: roslaunch.scriptapi.ROSLaunch
-
-    @classmethod
-    def setUpClass(cls):
-        cls.world = BulletWorld("DIRECT")
-        cls.robot = Object(robot_description.name, ObjectType.ROBOT, robot_description.name + ".urdf")
-        ProcessModule.execution_delay = True
-
-    def setUp(self):
-        self.world.reset_bullet_world()
 
     def test_retry_with_success(self):
         with simulated_robot:
@@ -44,13 +35,6 @@ class FailureHandlingTest(unittest.TestCase):
         with simulated_robot:
             with self.assertRaises(PlanFailure):
                 Retry(DummyActionDesignator(), max_tries=5).perform()
-
-    def tearDown(self):
-        self.world.reset_bullet_world()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.world.exit()
 
 
 if __name__ == '__main__':

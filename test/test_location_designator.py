@@ -8,7 +8,7 @@ import pycram.enums
 from bullet_world_testcase import BulletWorldTestCase
 
 
-class TestActionDesignatorGrounding(BulletWorldTestCase):
+class TestLocationDesignatorGrounding(BulletWorldTestCase):
 
     def test_reachability(self):
         self.robot.set_joint_state(robot_description.torso_joint, 0.3)
@@ -48,13 +48,13 @@ class TestActionDesignatorGrounding(BulletWorldTestCase):
 
     def test_semantic_location(self):
         kitchen_desig = ObjectDesignatorDescription(names=["kitchen"])
-        location_desig = SemanticCostmapLocation("kitchen_island_surface", kitchen_desig.resolve())
+        location_desig = SemanticCostmapLocation("island_countertop", kitchen_desig.resolve())
         location = location_desig.resolve()
         self.assertTrue(len(location.pose.position_as_list()) == 3)
         self.assertTrue(len(location.pose.orientation_as_list()) == 4)
 
         milk_desig = ObjectDesignatorDescription(names=["milk"])
-        location_desig = SemanticCostmapLocation("kitchen_island_surface", kitchen_desig.resolve(), for_object=milk_desig.resolve())
+        location_desig = SemanticCostmapLocation("island_countertop", kitchen_desig.resolve(), for_object=milk_desig.resolve())
         location = location_desig.resolve()
         self.assertTrue(len(location.pose.position_as_list()) == 3)
         self.assertTrue(len(location.pose.orientation_as_list()) == 4)
