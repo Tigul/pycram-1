@@ -83,7 +83,7 @@ jobs:
 #          sudo pip3 install --upgrade numpy
       - name: install additional requirements
         run: |
-          sudo pip3 install pytest pyjpt mlflow
+          sudo pip3 install --ignore-installed pytest pyjpt mlflow
       - name: start roscore
         run: |
           roslaunch pycram ik_and_description.launch &
