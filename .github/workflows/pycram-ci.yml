@@ -7,6 +7,7 @@ on:
     branches:
       - dev
       - master
+      - fix-ci
   pull_request:
     branches:
       - master
@@ -73,9 +74,9 @@ jobs:
         run: |
           cd $GITHUB_WORKSPACE/ros_ws/src/pycram
           sudo pip3 install -r requirements.txt
-      - name: upgrade numpy
-        run: |
-          sudo pip3 install --upgrade numpy
+#      - name: upgrade numpy
+#        run: |
+#          sudo pip3 install --upgrade numpy
       - name: install additional requirements
         run: |
           sudo pip3 install pytest pyjpt mlflow
