@@ -70,10 +70,14 @@ jobs:
           catkin_make
           echo 'export ROS_HOSTNAME=localhost' >> ~/.bashrc
           echo 'source $GITHUB_WORKSPACE/ros_ws/devel/setup.bash' >> ~/.bashrc
+      - name: Upgrade pip
+        run: |
+          sudo pip3 install --upgrade pip
       - name: Install requirements
         run: |
           cd $GITHUB_WORKSPACE/ros_ws/src/pycram
           sudo pip3 install -r requirements.txt
+
 #      - name: upgrade numpy
 #        run: |
 #          sudo pip3 install --upgrade numpy
