@@ -508,7 +508,7 @@ class ObjectDesignatorDescription(DesignatorDescription):
         Name of the object
         """
 
-        type: str
+        type: ObjectType
         """
         Type of the object
         """
@@ -647,7 +647,7 @@ class ObjectDesignatorDescription(DesignatorDescription):
         :param resolver: An alternative resolver that returns an object designator for the list of names and types
         """
         super().__init__(resolver)
-        self.types: Optional[List[str]] = types
+        self.types: Optional[List[ObjectType]] = types
         self.names: Optional[List[str]] = names
 
     def ground(self) -> Union[Object, bool]:
