@@ -124,6 +124,7 @@ Authors
    designators
    resolvers
    examples
+   dev_guide
    troubleshooting
    ros_utils
    remarks
