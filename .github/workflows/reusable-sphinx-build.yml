@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - fix-ci
   pull_request:
     branches:
       - master
@@ -25,6 +26,11 @@ jobs:
 
       - name: Checkout 🛎
         uses: actions/checkout@v3
+
+      - name: Install PyCRAM dependencies 🍼
+        uses: py-actions/py-dependency-install@v4
+        with:
+          path: "requirements-setuptools.txt"
 
       # ----------------------------------------------------------------------------------------------------------------
 
