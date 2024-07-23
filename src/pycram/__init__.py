@@ -18,13 +18,9 @@ language -- implementation of the CRAM language.
 process_module -- implementation of process modules.
 """
 
-from . import utils
-
 import logging
 import logging.config
 
-# with utils.suppress_stdout_stderr():
-#     import pycram.process_modules
 import pycram.process_modules
 
 logging.basicConfig(level=logging.WARNING, format='%(levelname)s - %(name)s  - Line:%(lineno)d - %(message)s')
@@ -34,4 +30,6 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(levelname)s - %(name)s  - Line:%(lineno)d - %(message)s')
 ch.setFormatter(formatter)
 
-#from .resolver import *
+#from .specialized_designators import *
+
+__version__ = "0.0.2"

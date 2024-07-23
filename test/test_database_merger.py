@@ -8,10 +8,11 @@ import pycram.orm.utils
 from pycram.designators.action_designator import *
 from pycram.designators.location_designator import *
 from pycram.process_module import simulated_robot
-from pycram.enums import Arms, ObjectType
-from pycram.task import with_tree
-import pycram.task
-from pycram.bullet_world import Object
+from pycram.datastructures.enums import Arms, ObjectType, WorldMode
+from pycram.tasktree import with_tree
+import pycram.tasktree
+from pycram.worlds.bullet_world import BulletWorld
+from pycram.world_concepts.world_object import Object
 from pycram.designators.object_designator import *
 from dataclasses import dataclass, field
 
@@ -27,7 +28,7 @@ class Configuration:
 
 class ExamplePlans:
     def __init__(self):
-        self.world = BulletWorld("DIRECT")
+        self.world = BulletWorld(WorldMode.DIRECT)
         self.pr2 = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
         self.kitchen = Object("kitchen", ObjectType.ENVIRONMENT, "kitchen.urdf")
         self.milk = Object("milk", ObjectType.MILK, "milk.stl", pose=Pose([1.3, 1, 0.9]))
@@ -40,7 +41,7 @@ class ExamplePlans:
     @with_tree
     def pick_and_place_plan(self):
         with simulated_robot:
-            ParkArmsAction.Action(Arms.BOTH).perform()
+            ParkArmsActionPerformable(Arms.BOTH).perform()
             MoveTorsoAction([0.3]).resolve().perform()
             pickup_pose = CostmapLocation(target=self.cereal_desig.resolve(), reachable_for=self.robot_desig).resolve()
             pickup_arm = pickup_pose.reachable_arms[0]
@@ -59,7 +60,7 @@ class ExamplePlans:
 
             PlaceAction(self.cereal_desig, target_locations=[place_island.pose], arms=[pickup_arm]).resolve().perform()
 
-            ParkArmsAction.Action(Arms.BOTH).perform()
+            ParkArmsActionPerformable(Arms.BOTH).perform()
 
 
 class MergerTestCaseBase(unittest.TestCase):

@@ -1,29 +1,30 @@
 import json
 import threading
+import time
 
-import rosnode
 import rospy
 import sys
 import rosnode
-import urdf_parser_py
 
-import traceback
+from ..datastructures.enums import JointType, ObjectType
+from ..datastructures.pose import Pose
+# from ..robot_descriptions import robot_description
+from ..datastructures.world import World
+from ..datastructures.dataclasses import MeshVisualShape
+from ..world_concepts.world_object import Object
+# from ..robot_description import ManipulatorDescription
+from ..robot_description import RobotDescription
 
-from ..pose import Pose
-from ..robot_descriptions import robot_description
-from ..bullet_world import BulletWorld, Object
-from ..robot_description import ManipulatorDescription
-
-from typing import List, Tuple, Dict, Callable, Optional
+from typing_extensions import List, Dict, Callable, Optional
 from geometry_msgs.msg import PoseStamped, PointStamped, QuaternionStamped, Vector3Stamped
 from threading import Lock, RLock
 
 try:
-    from giskardpy.python_interface import GiskardWrapper
+    from giskardpy.python_interface.old_python_interface import OldGiskardWrapper as GiskardWrapper
     from giskard_msgs.msg import WorldBody, MoveResult, CollisionEntry
     from giskard_msgs.srv import UpdateWorldRequest, UpdateWorld, UpdateWorldResponse, RegisterGroupResponse
 except ModuleNotFoundError as e:
-    rospy.logwarn("Failed to import Giskard messages")
+    rospy.logwarn("Failed to import Giskard messages, the real robot will not be available")
 
 giskard_wrapper = None
 giskard_update_service = None
@@ -70,6 +71,7 @@ def init_giskard_interface(func: Callable) -> Callable:
         elif is_init and "/giskard" not in rosnode.get_node_names():
             rospy.logwarn("Giskard node is not available anymore, could not initialize giskard interface")
             is_init = False
+            giskard_wrapper = None
             return
 
         if "giskard_msgs" not in sys.modules:
@@ -95,13 +97,13 @@ def init_giskard_interface(func: Callable) -> Callable:
 @init_giskard_interface
 def initial_adding_objects() -> None:
     """
-    Adds object that are loaded in the BulletWorld to the Giskard belief state, if they are not present at the moment.
+    Adds object that are loaded in the World to the Giskard belief state, if they are not present at the moment.
     """
     groups = giskard_wrapper.get_group_names()
-    for obj in BulletWorld.current_bullet_world.objects:
-        if obj is BulletWorld.robot:
+    for obj in World.current_world.objects:
+        if obj is World.robot or obj is World.current_world.get_prospection_object_for_object(World.robot):
             continue
-        name = obj.name + "_" + str(obj.id)
+        name = obj.name
         if name not in groups:
             spawn_object(obj)
 
@@ -109,11 +111,11 @@ def initial_adding_objects() -> None:
 @init_giskard_interface
 def removing_of_objects() -> None:
     """
-    Removes objects that are present in the Giskard belief state but not in the BulletWorld from the Giskard belief state.
+    Removes objects that are present in the Giskard belief state but not in the World from the Giskard belief state.
     """
     groups = giskard_wrapper.get_group_names()
     object_names = list(
-        map(lambda obj: object_names.name + "_" + str(obj.id), BulletWorld.current_bullet_world.objects))
+        map(lambda obj: object_names.name, World.current_world.objects))
     diff = list(set(groups) - set(object_names))
     for grp in diff:
         giskard_wrapper.remove_group(grp)
@@ -122,19 +124,27 @@ def removing_of_objects() -> None:
 @init_giskard_interface
 def sync_worlds() -> None:
     """
-    Synchronizes the BulletWorld and the Giskard belief state, this includes adding and removing objects to the Giskard
-    belief state such that it matches the objects present in the BulletWorld and moving the robot to the position it is
-    currently at in the BulletWorld.
+    Synchronizes the World and the Giskard belief state, this includes adding and removing objects to the Giskard
+    belief state such that it matches the objects present in the World and moving the robot to the position it is
+    currently at in the World.
     """
     add_gripper_groups()
-    bullet_object_names = set()
-    for obj in BulletWorld.current_bullet_world.objects:
-        if obj.name != robot_description.name and len(obj.links) != 1:
-            bullet_object_names.add(obj.name + "_" + str(obj.id))
+    world_object_names = set()
+    for obj in World.current_world.objects:
+        if obj.name != RobotDescription.current_robot_description.name and obj.obj_type != ObjectType.ROBOT and len(obj.link_name_to_id) != 1:
+            world_object_names.add(obj.name)
+        if obj.name == RobotDescription.current_robot_description.name or obj.obj_type == ObjectType.ROBOT:
+            joint_config = obj.get_positions_of_all_joints()
+            non_fixed_joints = list(filter(lambda joint: joint.type != JointType.FIXED, obj.joints.values()))
+            joint_config_filtered = {joint.name: joint_config[joint.name] for joint in non_fixed_joints}
 
+            giskard_wrapper.monitors.add_set_seed_configuration(joint_config_filtered,
+                                                                RobotDescription.current_robot_description.name)
+            giskard_wrapper.monitors.add_set_seed_odometry(_pose_to_pose_stamped(obj.get_pose()),
+                                                           RobotDescription.current_robot_description.name)
     giskard_object_names = set(giskard_wrapper.get_group_names())
-    robot_name = {robot_description.name}
-    if not bullet_object_names.union(robot_name).issubset(giskard_object_names):
+    robot_name = {RobotDescription.current_robot_description.name}
+    if not world_object_names.union(robot_name).issubset(giskard_object_names):
         giskard_wrapper.clear_world()
     initial_adding_objects()
 
@@ -148,23 +158,23 @@ def update_pose(object: Object) -> 'UpdateWorldResponse':
     :param object: Object that should be updated
     :return: An UpdateWorldResponse
     """
-    return giskard_wrapper.update_group_pose(object.name + "_" + str(object.id), object.get_pose())
+    return giskard_wrapper.update_group_pose(object.name)
 
 
 @init_giskard_interface
 def spawn_object(object: Object) -> None:
     """
-    Spawns a BulletWorld Object in the giskard belief state.
+    Spawns a World Object in the giskard belief state.
 
-    :param object: BulletWorld object that should be spawned
+    :param object: World object that should be spawned
     """
-    if len(object.links) == 1:
-        geometry = object.urdf_object.link_map[object.urdf_object.get_root()].collision.geometry
-        if isinstance(geometry, urdf_parser_py.urdf.Mesh):
-            filename = geometry.filename
-            spawn_mesh(object.name + "_" + str(object.id), filename, object.get_pose())
+    if len(object.link_name_to_id) == 1:
+        geometry = object.get_link_geometry(object.root_link_name)
+        if isinstance(geometry, MeshVisualShape):
+            filename = geometry.file_name
+            spawn_mesh(object.name, filename, object.get_pose())
     else:
-        spawn_urdf(object.name + "_" + str(object.id), object.path, object.get_pose())
+        spawn_urdf(object.name, object.path, object.get_pose())
 
 
 @init_giskard_interface
@@ -172,9 +182,9 @@ def remove_object(object: Object) -> 'UpdateWorldResponse':
     """
     Removes an object from the giskard belief state.
 
-    :param object: The BulletWorld Object that should be removed
+    :param object: The World Object that should be removed
     """
-    return giskard_wrapper.remove_group(object.name + "_" + str(object.id))
+    return giskard_wrapper.remove_group(object.name)
 
 
 @init_giskard_interface
@@ -220,51 +230,69 @@ def _manage_par_motion_goals(goal_func, *args) -> Optional['MoveResult']:
     :param args: Arguments for the ``goal_func`` function
     :return: MoveResult of the execution if there was an execution, True if a new motion goal was added to the giskard_wrapper and None in any other case
     """
+    # key is the instance of the parallel language element, value is a list of threads that should be executed in
+    # parallel
     for key, value in par_threads.items():
+        # if the current thread is in the list of threads that should be executed in parallel backup the current list
+        # of motion goals and monitors
         if threading.get_ident() in value:
-            tmp = giskard_wrapper.cmd_seq
+            tmp_goals = giskard_wrapper.motion_goals.get_goals()
+            tmp_monitors = giskard_wrapper.monitors.get_monitors()
 
             if key in par_motion_goal.keys():
-                giskard_wrapper.cmd_seq = par_motion_goal[key]
+                # giskard_wrapper.cmd_seq = par_motion_goal[key]
+                giskard_wrapper.motion_goals._goals = par_motion_goal[key][0]
+                giskard_wrapper.monitors._monitors = par_motion_goal[key][1]
             else:
-                giskard_wrapper.clear_cmds()
+                giskard_wrapper.clear_motion_goals_and_monitors()
 
             goal_func(*args)
 
             # Check if there are multiple constraints that use the same joint, if this is the case the
             used_joints = set()
-            for cmd in giskard_wrapper.cmd_seq:
-                for con in cmd.constraints:
-                    par_value_pair = json.loads(con.parameter_value_pair)
-                    if "tip_link" in par_value_pair.keys() and "root_link" in par_value_pair.keys():
-                        if par_value_pair["tip_link"] == robot_description.base_link:
-                            continue
-                        chain = BulletWorld.robot.urdf_object.get_chain(par_value_pair["root_link"],
-                                                                        par_value_pair["tip_link"])
-                        if set(chain).intersection(used_joints) != set():
-                            giskard_wrapper.cmd_seq = tmp
-                            raise AttributeError(f"The joint(s) {set(chain).intersection(used_joints)} is used by multiple Designators")
-                        else:
-                            [used_joints.add(joint) for joint in chain]
-                            
-                    elif "goal_state" in par_value_pair.keys():
-                        if set(par_value_pair["goal_state"].keys()).intersection(used_joints) != set():
-                            giskard_wrapper.cmd_seq = tmp
-                            raise AttributeError(f"The joint(s) {set(par_value_pair['goal_state'].keys()).intersection(used_joints)} is used by multiple Designators")
-                        else:
-                            [used_joints.add(joint) for joint in par_value_pair["goal_state"].keys()]
+            for cmd in giskard_wrapper.motion_goals.get_goals():
+                par_value_pair = json.loads(cmd.kwargs)
+                if "tip_link" in par_value_pair.keys() and "root_link" in par_value_pair.keys():
+                    if par_value_pair["tip_link"] == robot_description.base_link:
+                        continue
+                    chain = World.robot.description.get_chain(par_value_pair["root_link"],
+                                                              par_value_pair["tip_link"])
+                    if set(chain).intersection(used_joints) != set():
+                        giskard_wrapper.motion_goals._goals = tmp_goals
+                        giskard_wrapper.monitors._monitors = tmp_monitors
+                        raise AttributeError(
+                            f"The joint(s) {set(chain).intersection(used_joints)} is used by multiple Designators")
+                    else:
+                        [used_joints.add(joint) for joint in chain]
+
+                elif "goal_state" in par_value_pair.keys():
+                    if set(par_value_pair["goal_state"].keys()).intersection(used_joints) != set():
+                        giskard_wrapper.motion_goals._goals = tmp_goals
+                        giskard_wrapper.monitors._monitors = tmp_monitors
+                        raise AttributeError(
+                            f"The joint(s) {set(par_value_pair['goal_state'].keys()).intersection(used_joints)} is used by multiple Designators")
+                    else:
+                        [used_joints.add(joint) for joint in par_value_pair["goal_state"].keys()]
 
             par_threads[key].remove(threading.get_ident())
+            # If this is the last thread that should be executed in parallel, execute the complete sequence of motion
+            # goals
             if len(par_threads[key]) == 0:
                 if key in par_motion_goal.keys():
                     del par_motion_goal[key]
                 del par_threads[key]
-                res = giskard_wrapper.plan_and_execute()
-                giskard_wrapper.cmd_seq = tmp
+                # giskard_wrapper.add_default_end_motion_conditions()
+                res = giskard_wrapper.execute()
+                giskard_wrapper.motion_goals._goals = tmp_goals
+                giskard_wrapper.monitors._monitors = tmp_monitors
                 return res
+            # If there are still threads that should be executed in parallel, save the current state of motion goals and
+            # monitors.
             else:
-                par_motion_goal[key] = giskard_wrapper.cmd_seq
-                giskard_wrapper.cmd_seq = tmp
+                par_motion_goal[key] = [giskard_wrapper.motion_goals.get_goals(),
+                                        giskard_wrapper.monitors.get_monitors()]
+                giskard_wrapper.motion_goals._goals = tmp_goals
+                giskard_wrapper.monitors._monitors = tmp_monitors
                 return True
 
 
@@ -284,7 +312,8 @@ def achieve_joint_goal(goal_poses: Dict[str, float]) -> 'MoveResult':
         return par_return
 
     giskard_wrapper.set_joint_goal(goal_poses)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -306,7 +335,8 @@ def achieve_cartesian_goal(goal_pose: Pose, tip_link: str, root_link: str) -> 'M
         return par_return
 
     giskard_wrapper.set_cart_goal(_pose_to_pose_stamped(goal_pose), tip_link, root_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -329,7 +359,8 @@ def achieve_straight_cartesian_goal(goal_pose: Pose, tip_link: str,
         return par_return
 
     giskard_wrapper.set_straight_cart_goal(_pose_to_pose_stamped(goal_pose), tip_link, root_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -351,7 +382,8 @@ def achieve_translation_goal(goal_point: List[float], tip_link: str, root_link: 
         return par_return
 
     giskard_wrapper.set_translation_goal(make_point_stamped(goal_point), tip_link, root_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -374,7 +406,8 @@ def achieve_straight_translation_goal(goal_point: List[float], tip_link: str, ro
         return par_return
 
     giskard_wrapper.set_straight_translation_goal(make_point_stamped(goal_point), tip_link, root_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -396,7 +429,8 @@ def achieve_rotation_goal(quat: List[float], tip_link: str, root_link: str) -> '
         return par_return
 
     giskard_wrapper.set_rotation_goal(make_quaternion_stamped(quat), tip_link, root_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -422,7 +456,8 @@ def achieve_align_planes_goal(goal_normal: List[float], tip_link: str, tip_norma
     giskard_wrapper.set_align_planes_goal(make_vector_stamped(goal_normal), tip_link,
                                           make_vector_stamped(tip_normal),
                                           root_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -441,7 +476,8 @@ def achieve_open_container_goal(tip_link: str, environment_link: str) -> 'MoveRe
     if par_return:
         return par_return
     giskard_wrapper.set_open_container_goal(tip_link, environment_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
 
 
 @init_giskard_interface
@@ -461,7 +497,67 @@ def achieve_close_container_goal(tip_link: str, environment_link: str) -> 'MoveR
         return par_return
 
     giskard_wrapper.set_close_container_goal(tip_link, environment_link)
-    return giskard_wrapper.plan_and_execute()
+    # giskard_wrapper.add_default_end_motion_conditions()
+    return giskard_wrapper.execute()
+
+
+# Projection Goals
+
+
+@init_giskard_interface
+def projection_cartesian_goal(goal_pose: Pose, tip_link: str, root_link: str) -> 'MoveResult':
+    """
+    Tries to move the tip_link to the position defined by goal_pose using the chain defined by tip_link and root_link.
+    The goal_pose is projected to the closest point on the robot's workspace.
+
+    :param goal_pose: The position which should be achieved with tip_link
+    :param tip_link: The end link of the chain as well as the link which should achieve the goal_pose
+    :param root_link: The starting link of the chain which should be used to achieve this goal
+    :return: MoveResult message for this goal
+    """
+    sync_worlds()
+    giskard_wrapper.set_cart_goal(_pose_to_pose_stamped(goal_pose), tip_link, root_link)
+    return giskard_wrapper.projection()
+
+
+@init_giskard_interface
+def projection_cartesian_goal_with_approach(approach_pose: Pose, goal_pose: Pose, tip_link: str, root_link: str,
+                                            robot_base_link: str) -> 'MoveResult':
+    """
+    Tries to achieve the goal_pose using the chain defined by tip_link and root_link. The approach_pose is used to drive
+    the robot to a pose close the actual goal pose, the robot_base_link is used to define the base link of the robot.
+
+    :param approach_pose: Pose near the goal_pose
+    :param goal_pose: Pose to which the tip_link should be moved
+    :param tip_link: The link which should be moved to goal_pose, usually the tool frame
+    :param root_link: The start of the link chain which should be used for planning
+    :param robot_base_link: The base link of the robot
+    :return: A trajectory calculated to move the tip_link to the goal_pose
+    """
+    sync_worlds()
+    giskard_wrapper.allow_all_collisions()
+    giskard_wrapper.set_cart_goal(_pose_to_pose_stamped(approach_pose), robot_base_link, "map")
+    giskard_wrapper.projection()
+    giskard_wrapper.avoid_all_collisions()
+    giskard_wrapper.set_cart_goal(_pose_to_pose_stamped(goal_pose), tip_link, root_link)
+    return giskard_wrapper.projection()
+
+
+@init_giskard_interface
+def projection_joint_goal(goal_poses: Dict[str, float], allow_collisions: bool = False) -> 'MoveResult':
+    """
+    Tries to achieve the joint goal defined by goal_poses, the goal_poses are projected to the closest point on the
+    robot's workspace.
+
+    :param goal_poses: Dictionary with joint names and position goals
+    :param allow_collisions: If all collisions should be allowed for this goal
+    :return: MoveResult message for this goal
+    """
+    sync_worlds()
+    if allow_collisions:
+        giskard_wrapper.allow_all_collisions()
+    giskard_wrapper.set_joint_goal(goal_poses)
+    return giskard_wrapper.projection()
 
 
 # Managing collisions
@@ -501,11 +597,8 @@ def add_gripper_groups() -> None:
         for name in giskard_wrapper.get_group_names():
             if "gripper" in name:
                 return
-
-        for name, description in robot_description.chains.items():
-            if isinstance(description, ManipulatorDescription):
-                root_link = robot_description.chains[name].gripper.links[-1]
-                giskard_wrapper.register_group(name + "_gripper", root_link, robot_description.name)
+        for description in RobotDescription.current_robot_description.get_manipulator_chains():
+            giskard_wrapper.register_group(description.name + "_gripper", description.start_link, RobotDescription.current_robot_description.name)
 
 
 @init_giskard_interface
@@ -529,10 +622,10 @@ def avoid_collisions(object1: Object, object2: Object) -> None:
     """
     Will avoid collision between the two objects for the next goal.
 
-    :param object1: The first BulletWorld Object
-    :param object2: The second BulletWorld Object
+    :param object1: The first World Object
+    :param object2: The second World Object
     """
-    giskard_wrapper.avoid_collision(-1, object1.name + "_" + str(object1.id), object2.name + "_" + str(object2.id))
+    giskard_wrapper.avoid_collision(-1, object1.name, object2.name)
 
 
 # Creating ROS messages
@@ -540,10 +633,10 @@ def avoid_collisions(object1: Object, object2: Object) -> None:
 @init_giskard_interface
 def make_world_body(object: Object) -> 'WorldBody':
     """
-    Creates a WorldBody message for a BulletWorld Object. The WorldBody will contain the URDF of the BulletWorld Object
+    Creates a WorldBody message for a World Object. The WorldBody will contain the URDF of the World Object
 
-    :param object: The BulletWorld Object
-    :return: A WorldBody message for the BulletWorld Object
+    :param object: The World Object
+    :return: A WorldBody message for the World Object
     """
     urdf_string = ""
     with open(object.path) as f:
