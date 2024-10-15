@@ -1,5 +1,7 @@
 import numpy as np
 from threading import Lock
+
+from actionlib_msgs.msg import GoalStatus
 from typing_extensions import Any
 
 from ..datastructures.enums import ExecutionType
@@ -10,13 +12,15 @@ from ..local_transformer import LocalTransformer
 from ..designators.motion_designator import *
 from ..external_interfaces import giskard
 from ..datastructures.world import World
+from ..ros.action_lib import create_action_client
 from pydub import AudioSegment
 from pydub.playback import play
 from gtts import gTTS
+from move_base_msgs.msg import MoveBaseAction, MoveBaseGoal
 
 import io
 
-from ..ros.logging import logdebug
+from ..ros.logging import logdebug, loginfo
 
 
 class HSRBNavigation(ProcessModule):
@@ -51,9 +55,28 @@ class HSRBNavigationReal(ProcessModule):
 
     def _execute(self, designator: MoveMotion) -> Any:
         logdebug(f"Sending goal to giskard to Move the robot")
-        # giskard.achieve_cartesian_goal(designator.target, robot_description.base_link, "map")
-        # todome fix this
-        # queryPoseNav(designator.target)
+        def active_callback():
+            loginfo("Start Navigating")
+        def feedback_callback(msg):
+            pass
+        def done_callback(state, result):
+            loginfo("Finished Navigation")
+            for k in GoalStatus.__dict__.keys():
+                if state == GoalStatus.__dict__[k]:
+                    loginfo(f"Navigation has Finished with the result: {k}")
+        client = create_action_client("move_base/move", MoveBaseAction)
+
+        goal = MoveBaseGoal()
+        pose = designator.target
+        goal.target_pose.pose = pose
+        # goal.target_pose.pose.orientation.w = 1
+        # goal.target_pose.pose.position.x = 1
+        # goal.target_pose.pose.position.y = 1
+        goal.target_pose.header.frame_id = "map"
+        loginfo("Waiting for action server")
+        client.wait_for_server()
+        client.send_goal(goal, active_cb=active_callback, done_cb=done_callback, feedback_cb=feedback_callback)
+        wait = client.wait_for_result()
 
 
 class HSRBMoveHeadReal(ProcessModule):
