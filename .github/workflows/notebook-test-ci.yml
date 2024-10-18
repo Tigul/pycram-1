@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - test-test-ci
   pull_request:
     branches:
       - master
@@ -49,6 +50,7 @@ jobs:
           cd /opt/ros/overlay_ws/src/pycram/examples
           mkdir tmp
           jupytext --to notebook *.ipynb
+          ls .
           mv *.ipynb tmp && cd tmp
 
 
