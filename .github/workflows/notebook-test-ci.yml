@@ -49,7 +49,7 @@ jobs:
         run: |
           cd /opt/ros/overlay_ws/src/pycram/examples
           mkdir tmp
-          jupytext --to notebook *.ipynb
+          jupytext --to notebook *.md
           ls .
           mv *.ipynb tmp && cd tmp
 
