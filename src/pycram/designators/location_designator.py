@@ -245,7 +245,7 @@ class AccessingLocation(LocationDesignatorDescription):
         # ground_pose = [[self.handle.part_pose[0][0], self.handle.part_pose[0][1], 0], self.handle.part_pose[1]]
         ground_pose = Pose(self.handle.part_pose.position_as_list())
         ground_pose.position.z = 0
-        occupancy = OccupancyCostmap(distance_to_obstacle=0.4, from_ros=False, size=200, resolution=0.02,
+        occupancy = OccupancyCostmap(distance_to_obstacle=0.25, from_ros=False, size=200, resolution=0.02,
                                      origin=ground_pose)
         gaussian = GaussianCostmap(200, 15, 0.02, ground_pose)
 
@@ -271,20 +271,22 @@ class AccessingLocation(LocationDesignatorDescription):
                                                self.handle.name)
 
         with UseProspectionWorld():
-            for maybe_pose in PoseGenerator(final_map, number_of_samples=600,
+            for maybe_pose in PoseGenerator(final_map, number_of_samples=300,
                                              orientation_generator=lambda p, o: PoseGenerator.generate_orientation(p, half_pose)):
 
                 hand_links = []
                 for description in RobotDescription.current_robot_description.get_manipulator_chains():
                     hand_links += description.links
+                all_links = list(test_robot.links.keys())
 
                 valid_init, arms_init = reachability_validator(maybe_pose, test_robot, init_pose,
-                                                               allowed_collision={test_robot: hand_links})
+                                                               allowed_collision={test_robot: all_links})
 
                 valid_goal, arms_goal = reachability_validator(maybe_pose, test_robot, goal_pose,
-                                                               allowed_collision={test_robot: hand_links})
+                                                               allowed_collision={test_robot: all_links})
 
                 arms_list = list(set(arms_init).intersection(set(arms_goal)))
+                # print(f"valid_init: {valid_init}, valid_goal: {valid_goal}, arms_list: {arms_list}")
 
                 if valid_init and valid_goal and len(arms_list) > 0:
                     yield self.Location(maybe_pose, arms_list)

@@ -53,9 +53,14 @@ jobs:
           ls .
           mv *.ipynb tmp && cd tmp
 
+      - name: Source and start ROS
+        run: |
+          source /opt/ros/overlay_ws/devel/setup.bash 
+          roslaunch pycram ik_and_description.launch &
 
       - name: Run tests
         run: |
+          
           source /opt/ros/overlay_ws/devel/setup.bash 
           roscd pycram/examples/tmp
           treon --thread 1 -v
