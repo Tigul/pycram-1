@@ -119,7 +119,7 @@ print(object_poses)
 If You want to visualize all apartment frames
 
 ```python
-import pybullet as p
+import pycram_bullet as p
 
 for link_name in apartment.links.keys():
     world.add_vis_axis(apartment.get_link_pose(link_name))
