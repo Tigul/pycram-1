@@ -26,8 +26,25 @@ jobs:
 
     steps:
 
-      - name: Checkout 🛎
+      - name: Checkout PyCRAM
         uses: actions/checkout@v3
+        with:
+          path: "ros/src/pycram"
+          repository: ${{ github.repository }}
+          ref: ${{ github.ref }}
+          submodules: "recursive"
+
+      # For debugging
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
+      - name: Update PyCRAM source files
+        run: |
+          rm -rf /opt/ros/overlay_ws/src/pycram/* 
+          cd /opt/ros/overlay_ws/src/pycram
+          rm -rf .git .github .gitignore .gitmodules .readthedocs.yaml
+          cp -r /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/ros/src/pycram /opt/ros/overlay_ws/src
 
       # ----------------------------------------------------------------------------------------------------------------
 
@@ -36,6 +53,7 @@ jobs:
           pip3 install --upgrade pip --root-user-action=ignore
           cd /opt/ros/overlay_ws/src/pycram
           pip3 install -r requirements.txt
+          sudo apt-get install -y libpq-dev
           pip3 install -r requirements-resolver.txt
 
       # ----------------------------------------------------------------------------------------------------------------
@@ -48,9 +66,9 @@ jobs:
       - name: Convert Notebooks
         run: |
           cd /opt/ros/overlay_ws/src/pycram/examples
+          rm -rf tmp
           mkdir tmp
           jupytext --to notebook *.md
-          ls .
           mv *.ipynb tmp && cd tmp
 
       - name: Source and start ROS
