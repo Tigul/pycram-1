@@ -22,7 +22,7 @@ Next we will create a bullet world with a PR2 in a kitchen containing milk and c
 from pycram.worlds.bullet_world import BulletWorld
 from pycram.robot_description import RobotDescription
 import pycram.tasktree
-from pycram.datastructures.enums import Arms, ObjectType
+from pycram.datastructures.enums import Arms, ObjectType, WorldMode
 from pycram.designators.action_designator import *
 from pycram.designators.location_designator import *
 from pycram.process_module import simulated_robot
@@ -32,7 +32,7 @@ from pycram.world_concepts.world_object import Object
 import anytree
 import pycram.failures
 
-world = BulletWorld()
+world = BulletWorld(WorldMode.GUI)
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
 robot_desig = ObjectDesignatorDescription(names=['pr2']).resolve()
 apartment = Object("apartment", "environment", "apartment.urdf", pose=Pose([-1.5, -2.5, 0]))
@@ -102,7 +102,7 @@ scm = SemanticCostmap(apartment, "island_countertop")
 poses_list = list(PoseGenerator(scm, number_of_samples=-1))
 poses_list.sort(reverse=True, key=lambda x: np.linalg.norm(x.position_as_list()))
 object_poses = get_n_random_positions(poses_list)
-object_names = ["bowl", "milk", "breakfast_cereal", "spoon"]
+object_names = ["bowl", "breakfast_cereal", "spoon"]
 objects = {}
 object_desig = {}
 for obj_name, obj_pose in zip(object_names, object_poses):
@@ -148,7 +148,7 @@ def plan(obj, obj_desig, torso=0.2, place="countertop"):
         MoveTorsoActionPerformable(torso).perform()
         location = CostmapLocation(target=obj_desig, reachable_for=robot_desig)
         pose = location.resolve()
-        print()
+
         NavigateActionPerformable(pose.pose).perform()
         ParkArmsActionPerformable(Arms.BOTH).perform()
         good_torsos.append(torso)
@@ -157,7 +157,11 @@ def plan(obj, obj_desig, torso=0.2, place="countertop"):
 
         ParkArmsActionPerformable(Arms.BOTH).perform()
         scm = SemanticCostmapLocation(place, apartment_desig, obj_desig)
-        pose_island = scm.resolve()
+        scm = iter(scm)
+        pose_island = None
+        for i in range(np.random.randint(5, 15)):
+            pose_island = next(scm)
+        print(pose_island)
 
         place_location = CostmapLocation(target=pose_island.pose, reachable_for=robot_desig,
                                          reachable_arm=picked_up_arm)
@@ -205,7 +209,7 @@ tree even though they are not connected.
 
 ```python
 world.reset_world()
-plan(objects["milk"], object_desig["milk"])
+plan(objects["bowl"], object_desig["bowl"], torso=0.25)
 print(anytree.RenderTree(tt, style=anytree.render.AsciiStyle()))
 ```
 
@@ -251,16 +255,17 @@ pycram.tasktree.task_tree.reset_tree()
 print(anytree.RenderTree(pycram.tasktree.task_tree, style=anytree.render.AsciiStyle()))
 ```
 
-If a plan fails using the PlanFailure exception, the plan will not stop. Instead, the error will be logged and saved in
-the task tree as a failed subtask. First let's create a simple failing plan and execute it.
+If a plan fails using the PlanFailure exception, the plan will stop and raise the respective error. Additionally, the error will be logged in the node of the TaskTree. First let's create a simple failing plan and execute it.
 
 ```python
 @pycram.tasktree.with_tree
 def failing_plan():
-    raise pycram.plan_failures.PlanFailure("Oopsie!")
+    raise pycram.failures.PlanFailure("Oopsie!")
 
-
-failing_plan()
+try:
+    failing_plan()
+except pycram.failures.PlanFailure as e:
+    print(e)
 ```
 
 We can now investigate the nodes of the tree, and we will see that the tree indeed contains a failed task.
