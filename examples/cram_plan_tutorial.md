@@ -31,6 +31,9 @@ from pycram.datastructures.pose import Pose
 from pycram.world_concepts.world_object import Object
 import anytree
 import pycram.failures
+import numpy as np
+
+np.random.seed(1)
 
 world = BulletWorld(WorldMode.GUI)
 robot = Object("pr2", ObjectType.ROBOT, "pr2.urdf")
@@ -163,6 +166,7 @@ def plan(obj, obj_desig, torso=0.2, place="countertop"):
             pose_island = next(scm)
         print(pose_island)
 
+
         place_location = CostmapLocation(target=pose_island.pose, reachable_for=robot_desig,
                                          reachable_arm=picked_up_arm)
         pose = place_location.resolve()
@@ -255,7 +259,8 @@ pycram.tasktree.task_tree.reset_tree()
 print(anytree.RenderTree(pycram.tasktree.task_tree, style=anytree.render.AsciiStyle()))
 ```
 
-If a plan fails using the PlanFailure exception, the plan will stop and raise the respective error. Additionally, the error will be logged in the node of the TaskTree. First let's create a simple failing plan and execute it.
+If a plan fails using the PlanFailure exception, the plan will stop and raise the respective error. 
+Additionally, the error will be logged in the node of the TaskTree. First let's create a simple failing plan and execute it.
 
 ```python
 @pycram.tasktree.with_tree
