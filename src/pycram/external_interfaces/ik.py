@@ -19,6 +19,7 @@ from ..robot_description import RobotDescription
 from ..failures import IKError
 from ..external_interfaces.giskard import projection_cartesian_goal, allow_gripper_collision
 from .pinocchio_ik import compute_ik
+from .pink_ik import compute_ik as pink_compute_ik
 
 
 def _make_request_msg(root_link: str, tip_link: str, target_pose: Pose, robot_object: Object,
@@ -269,6 +270,7 @@ def request_pinocchio_ik(target_pose: Pose, robot: Object, target_link: str, joi
     wrist_tool_frame_offset = robot.get_transform_between_links(wrist_link, target_link)
     target_diff = target_pose.to_transform("target").inverse_times(wrist_tool_frame_offset).to_pose()
 
-    res = compute_ik(target_link, target_diff, robot)
+    # res = compute_ik(target_link, target_diff, robot)
+    res = pink_compute_ik(target_link, target_diff, robot)
 
     return res
