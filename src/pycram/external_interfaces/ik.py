@@ -21,6 +21,7 @@ from ..robot_description import RobotDescription
 from ..failures import IKError
 from ..external_interfaces.giskard import projection_cartesian_goal, allow_gripper_collision
 from .pinocchio_ik import compute_ik
+from .giskard_ik import compute_giskardlib_ik
 
 
 def _make_request_msg(root_link: str, tip_link: str, target_pose: Pose, robot_object: Object,
@@ -174,7 +175,8 @@ def request_ik(target_pose: Pose, robot: Object, joints: List[str], gripper: str
     :return: A Pose at which the robt should stand as well as a dictionary of joint values
     """
     if "/giskard" not in get_node_names():
-        return robot.pose, request_pinocchio_ik(target_pose, robot, gripper, joints)
+        return robot.pose, request_giskardlib_ik(target_pose, robot, gripper, joints)
+        # return robot.pose, request_pinocchio_ik(target_pose, robot, gripper, joints)
         # return robot.pose, request_kdl_ik(target_pose, robot, joints, gripper)
     return request_giskard_ik(target_pose, robot, gripper)
 
@@ -272,5 +274,30 @@ def request_pinocchio_ik(target_pose: Pose, robot: Object, target_link: str, joi
     target_diff.round()
 
     res = compute_ik(wrist_link, target_diff, robot)
+
+    return res
+
+def request_giskardlib_ik(target_pose: Pose, robot: Object, target_link: str, joints) -> Dict[str, float]:
+    """
+    Calls the giskard ik solver to calculate the ik solution for a given target link and pose.
+
+    :param target_link: The target link for which the ik solution should be calculated
+    :param target_pose: The target pose for which the ik solution should be calculated
+    :param robot: The robot object for which the ik solution should be calculated
+    :return: A dictionary containing the joint names and joint values
+    """
+    lt = LocalTransformer()
+    target_pose = lt.transform_pose(target_pose, robot.tf_frame)
+
+    # Get link after last joint in chain
+    wrist_link = RobotDescription.current_robot_description.get_child(joints[-1])
+
+    # target_torso = lt.transform_pose(target_pose, robot.get_link_tf_frame(base_link))
+
+    wrist_tool_frame_offset = robot.get_transform_between_links(wrist_link, target_link)
+    target_diff = target_pose.to_transform("target").inverse_times(wrist_tool_frame_offset).to_pose()
+    target_diff.round()
+
+    res = compute_giskardlib_ik(target_diff, robot, wrist_link)
 
     return res
