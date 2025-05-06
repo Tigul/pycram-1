@@ -50,7 +50,7 @@ jobs:
       - name: Remake workspace & start roscore
         run: |
           sudo -s
-          source /opt/ros/noetic/setup.bash
+          source /opt/ros/jazzy/setup.bash
           cd /opt/ros/overlay_ws
           colcon build --symlink-install
           source /opt/ros/overlay_ws/install/setup.bash 
@@ -67,12 +67,12 @@ jobs:
 
       - name: Run tests
         run: | 
-          source /opt/ros/overlay_ws/devel/setup.bash 
-          roscd pycram
+          source /opt/ros/overlay_ws/install/setup.bash 
+          cd /opt/ros/overlay_ws/src/pycram
           pytest -v test
 
       - name: Run Demos
         run: | 
-          source /opt/ros/overlay_ws/devel/setup.bash 
-          roscd pycram
+          source /opt/ros/overlay_ws/install/setup.bash 
+          cd /opt/ros/overlay_ws/src/pycram
           python3 demos/pycram_bullet_world_demo/test_demo.py
