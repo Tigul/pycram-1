@@ -17,7 +17,7 @@ pynput~=1.7.7
 # playsound
 # pydub~=0.25.1
 # gTTS~=2.5.3
-# dm_control
+dm_control
 trimesh==4.6.0
 deprecated
 probabilistic_model>=6.0.2
