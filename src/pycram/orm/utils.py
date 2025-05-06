@@ -1,5 +1,6 @@
 import traceback
 import sqlalchemy
+from sqlalchemy.orm import sessionmaker
 try:
     from .ormatic_interface import mapper_registry
 except ImportError:
@@ -11,7 +12,7 @@ from ..ros import  loginfo, logwarn
 
 
 
-def write_database_to_file(in_sessionmaker: sqlalchemy.orm.sessionmaker, filename: str,
+def write_database_to_file(in_sessionmaker: sessionmaker, filename: str,
                            b_write_to_console: bool = False):
     """
     Writes all Tables stored within the given session into a local file. File will be written in JSON Format
@@ -32,7 +33,7 @@ def write_database_to_file(in_sessionmaker: sqlalchemy.orm.sessionmaker, filenam
             f.write(json_data_dict)
 
 
-def print_database(in_sessionmaker: sqlalchemy.orm.sessionmaker):
+def print_database(in_sessionmaker: sessionmaker):
     """
     Prints all ORM Class data within the given Session.
 
@@ -48,8 +49,8 @@ def print_database(in_sessionmaker: sqlalchemy.orm.sessionmaker):
                 logwarn(e)
 
 
-def update_primary_key(source_session_maker: sqlalchemy.orm.sessionmaker,
-                       destination_session_maker: sqlalchemy.orm.sessionmaker):
+def update_primary_key(source_session_maker: sessionmaker,
+                       destination_session_maker: sessionmaker):
     """
     Updates all the primary keys of the database associated with the destination engine, so that there will be no
     problems when merging it into the source database. In order to achieve this the highest id value of the source
@@ -97,8 +98,8 @@ def update_primary_key(source_session_maker: sqlalchemy.orm.sessionmaker,
     destination_session.close()
 
 
-def copy_database(source_session_maker: sqlalchemy.orm.sessionmaker,
-                  destination_session_maker: sqlalchemy.orm.sessionmaker):
+def copy_database(source_session_maker: sessionmaker,
+                  destination_session_maker: sessionmaker):
     """
     Iterates through all tables within tht source database and merges them into the destination database. Careful
     this function does not check if there are any primary key collisions or updates any data.
@@ -122,7 +123,7 @@ def copy_database(source_session_maker: sqlalchemy.orm.sessionmaker,
             destination_session.commit()  # commit after every table
 
 
-def update_primary_key_constrains(session_maker: sqlalchemy.orm.sessionmaker):
+def update_primary_key_constrains(session_maker: sessionmaker):
     """
     Iterates through all tables related to any ORM Class and sets in their corresponding foreign keys in the given
     endpoint to "ON UPDATE CASCADING".
@@ -162,8 +163,8 @@ def update_primary_key_constrains(session_maker: sqlalchemy.orm.sessionmaker):
                 loginfo("Attribute Error: {} has no attribute __tablename__".format(table))
 
 
-def migrate_neems(source_session_maker: sqlalchemy.orm.sessionmaker,
-                  destination_session_maker: sqlalchemy.orm.sessionmaker):
+def migrate_neems(source_session_maker: sessionmaker,
+                  destination_session_maker: sessionmaker):
     """
         Merges the database connected to the source session maker into the database connected to the destination session
         maker. Will first update the primary constrains inside the destination database (if needed). Afterwards
