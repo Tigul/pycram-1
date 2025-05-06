@@ -58,7 +58,7 @@ jobs:
       - name: Install python dependencies, PyTest and pyjpt
         run: |
           cd /opt/ros/overlay_ws/src/pycram
-          source pycram-venv/bin/activate
+          source ../pycram-venv/bin/activate
           pip install -r requirements.txt
           pip install -r requirements-resolver.txt
           pip install --ignore-installed pytest pyjpt
@@ -67,12 +67,12 @@ jobs:
         run: | 
           source /opt/ros/overlay_ws/install/setup.bash 
           cd /opt/ros/overlay_ws/src/pycram
-          source pycram-venv/bin/activate
+          source ../pycram-venv/bin/activate
           pytest -v test
 
       - name: Run Demos
         run: | 
           source /opt/ros/overlay_ws/install/setup.bash 
           cd /opt/ros/overlay_ws/src/pycram
-          source pycram-venv/bin/activate
+          source ../pycram-venv/bin/activate
           python3 demos/pycram_bullet_world_demo/test_demo.py

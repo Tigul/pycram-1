@@ -16,7 +16,7 @@ RUN echo "source $OVERLAY_WS/install/setup.bash" >> ~/.bashrc
 
 # RUN rm -rf $OVERLAY_WS/src/pycram
 # COPY . $OVERLAY_WS/src/pycram
-RUN python3 -m venv pycram/pycram-venv --system-site-packages  && source pycram/pycram-venv/bin/activate && pip install -U pip && pip install -U setuptools && pip install -r $OVERLAY_WS/src/pycram/requirements.txt
+RUN python3 -m venv pycram-venv --system-site-packages  && source pycram-venv/bin/activate && pip install -U pip && pip install -U setuptools && pip install -r $OVERLAY_WS/src/pycram/requirements.txt
 
 COPY entrypoint.sh /
 ENTRYPOINT ["bash", "/entrypoint.sh"]
