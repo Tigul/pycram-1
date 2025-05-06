@@ -50,20 +50,15 @@ jobs:
       - name: Remake workspace & start roscore
         run: |
           sudo -s
-          sudo apt-get install python3-catkin-tools -y
           source /opt/ros/noetic/setup.bash
           cd /opt/ros/overlay_ws
-          catkin build
-          source /opt/ros/overlay_ws/devel/setup.bash 
-          roscore &
+          colcon build --symlink-install
+          source /opt/ros/overlay_ws/install/setup.bash 
 
       - name: Install python dependencies
         run: |
-          pip3 install --upgrade pip --root-user-action=ignore
           cd /opt/ros/overlay_ws/src/pycram
           pip3 install -r requirements.txt
-          sudo apt-get update
-          sudo apt-get install -y libpq-dev
           pip3 install -r requirements-resolver.txt
 
       - name: Install pytest & pyjpt
