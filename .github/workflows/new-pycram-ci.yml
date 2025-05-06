@@ -59,7 +59,8 @@ jobs:
         run: |
           cd /opt/ros/overlay_ws/src/pycram
           ls .
-          ls pycram
+          echo "---"
+          ls ..
           source pycram-venv/bin/activate
           pip install -r requirements.txt
           pip install -r requirements-resolver.txt
