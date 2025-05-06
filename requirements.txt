@@ -6,7 +6,7 @@ numpy==1.26.4; python_version >= '3.9'
 numpy==1.24.4; python_version == '3.8'
 pytransform3d
 # graphviz
-SQLAlchemy>=2.0.36, <2.0.38 #orm
+SQLAlchemy #orm
 sqlacodegen==3.0.0 #orm
 tqdm==4.66.3
 psutil==5.9.7
