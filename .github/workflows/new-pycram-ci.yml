@@ -58,12 +58,12 @@ jobs:
       - name: Install python dependencies
         run: |
           cd /opt/ros/overlay_ws/src/pycram
-          pip3 install -r requirements.txt
-          pip3 install -r requirements-resolver.txt
+          pip install -r requirements.txt
+          pip install -r requirements-resolver.txt
 
       - name: Install pytest & pyjpt
         run: |
-          pip3 install --ignore-installed pytest pyjpt
+          pip install --ignore-installed pytest pyjpt
 
       - name: Run tests
         run: | 
