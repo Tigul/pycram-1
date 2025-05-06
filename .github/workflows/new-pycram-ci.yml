@@ -47,12 +47,12 @@ jobs:
           rm -rf .git .github .gitignore .gitmodules .readthedocs.yaml
           cp -r /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}/ros/src/pycram /opt/ros/overlay_ws/src
 
-      - name: Install python dependencies, PyTest and pyjpt
+      - name: Install python dependencies and PyTest
         run: |
           cd /opt/ros/overlay_ws/src/pycram
           source ../pycram-venv/bin/activate
           pip install -r requirements.txt
-          pip install --ignore-installed pytest pyjpt
+          pip install --ignore-installed pytest
 
       - name: Run tests
         run: | 
