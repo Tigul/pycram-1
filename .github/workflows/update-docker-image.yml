@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - dev
-      - new-cis
 #    paths:
 #      - 'requirements.txt'
 # only run when a commit has changes in the requirements.txt file
