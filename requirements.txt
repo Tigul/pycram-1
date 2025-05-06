@@ -8,6 +8,7 @@ pytransform3d
 # graphviz
 SQLAlchemy #orm
 sqlacodegen==3.0.0 #orm
+ormatic # orm
 tqdm==4.66.3
 psutil==5.9.7
 typing_extensions>=4.10.0
