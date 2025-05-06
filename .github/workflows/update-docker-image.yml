@@ -4,8 +4,9 @@ on:
     branches:
       - master
       - dev
-    paths:
-      - 'requirements.txt'
+      - new-cis
+#    paths:
+#      - 'requirements.txt'
 # only run when a commit has changes in the requirements.txt file
 
 jobs:
