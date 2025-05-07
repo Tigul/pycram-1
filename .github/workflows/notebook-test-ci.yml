@@ -70,4 +70,5 @@ jobs:
       - name: Run tests
         run: |
           source /opt/ros/overlay_ws/src/pycram-venv/bin/activate
+          cd /opt/ros/overlay_ws/src/pycram/examples/tmp
           python -m treon --thread 1 -v --exclude=migrate_neems.ipynb --exclude=improving_actions.ipynb
