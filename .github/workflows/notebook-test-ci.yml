@@ -51,7 +51,7 @@ jobs:
 
       - name: Install python dependencies
         run: |
-          source pycram-venv/bin/activate
+          source /opt/ros/overlay_ws/src/pycram-venv/bin/activate
           pip install --upgrade pip --root-user-action=ignore
           cd /opt/ros/overlay_ws/src/pycram
           pip install -r requirements.txt
@@ -60,7 +60,7 @@ jobs:
       # ----------------------------------------------------------------------------------------------------------------
       - name: Convert Notebooks
         run: |
-          source pycram-venv/bin/activate
+          source /opt/ros/overlay_ws/src/pycram-venv/bin/activate
           cd /opt/ros/overlay_ws/src/pycram/examples
           rm -rf tmp
           mkdir tmp
@@ -69,5 +69,5 @@ jobs:
 
       - name: Run tests
         run: |
-          source pycram-venv/bin/activate
+          source /opt/ros/overlay_ws/src/pycram-venv/bin/activate
           python -m treon --thread 1 -v --exclude=migrate_neems.ipynb --exclude=improving_actions.ipynb
