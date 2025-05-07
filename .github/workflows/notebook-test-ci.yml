@@ -5,6 +5,7 @@ on:
     branches:
       - dev
       - master
+      - new-cis
   pull_request:
     branches:
       - master
