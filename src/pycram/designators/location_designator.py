@@ -2,8 +2,9 @@ import dataclasses
 
 import numpy as np
 from box import Box
-from typing_extensions import List, Union, Iterable, Optional, Callable, Iterator, Sequence, Dict
+from typing_extensions import List, Union, Iterable, Optional, Callable, Iterator, Sequence, Dict, Type
 
+from pycrap.ontologies import PhysicalObject
 from .object_designator import ObjectPart
 from ..costmaps import OccupancyCostmap, VisibilityCostmap, SemanticCostmap, GaussianCostmap, Costmap
 from ..datastructures.enums import JointType, Arms, Grasp
@@ -457,3 +458,29 @@ class SemanticCostmapLocation(LocationDesignatorDescription):
             for maybe_pose in PoseGenerator(self.sem_costmap):
                 maybe_pose.position.z += height_offset
                 yield maybe_pose
+
+class KnowledgeLocation(LocationDesignatorDescription):
+    """
+    Location designator which queries Knowrob to infer a location for an object.
+    """
+
+    def __init__(self, object_type: Union[Iterable[Type[PhysicalObject]], Type[PhysicalObject]]):
+        """
+        Creates a location designator which uses knowledge about the world to create locations
+
+        :param object_type: The type of object for which the location should be found
+        """
+        super().__init__()
+        PartialDesignator.__init__(self, KnowledgeLocation, object_type=object_type,)
+
+    def __iter__(self) -> Iterator[PoseStamped]:
+        """
+        Creates a location designator which uses knowledge about the world to create locations
+
+        :yield: A location designator for the object
+        """
+        for params in self.generate_permutations():
+            params_box = Box(params)
+            yield params_box.object_type
+
+
