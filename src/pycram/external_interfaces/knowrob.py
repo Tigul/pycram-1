@@ -17,7 +17,7 @@ desig_execution_start = create_publisher("knowrob/designator_execution_started",
 desig_execution_finished = create_publisher("knowrob/designator_execution_finished", DesignatorExecutionFinished)
 desig_resolution_start = create_publisher("knowrob/designator_resolving_started", DesignatorResolutionStart)
 desig_resolution_finished = create_publisher("knowrob/designator_resolving_finished", DesignatorResolutionFinished)
-desig_init = create_publisher("knowrob/designator_init", DesignatorInit)
+desig_init = create_publisher("/knowrob/designator/push_object_designator", DesignatorInit)
 object_desig = create_publisher("knowrob/object_designator", ObjectDesignator)
 
 @lru_cache(maxsize=None)
@@ -27,7 +27,7 @@ def init_object_state():
     will only be called once, and the result will be cached for future calls.
     """
     for obj in World.current_world.objects:
-        obj_json = {"anObject": {"type": str(obj.obj_type)}}
+        obj_json = {"anObject": {"type": str(obj.obj_type), "links": [link for link in obj.links.keys()]}}
 
         msg = ObjectDesignator()
         msg.json_designator = str(obj_json)
@@ -103,13 +103,14 @@ def designator_to_json(node: DesignatorNode) -> str:
     params = {"anAction": params}
     return str(params)
 
-def get_current_ros_time() -> ROSTime:
+def get_current_ros_time(time: datetime = None) -> ROSTime:
     """
     Returns the ROS time as a ROSTime object.
 
     :return: The current ROS time.
     """
-    split_time = str(datetime.now().timestamp()).split(".")
+    time = time or datetime.now()
+    split_time = str(time.timestamp()).split(".")
     return ROSTime(int(split_time[0]), int(split_time[1]))
 
 
@@ -162,7 +163,7 @@ def resolution_finished_callback(node: PlanNode):
     msg = DesignatorResolutionFinished()
     msg.designator_id = str(hash(node.children[-1]))
     msg.json_designator = designator_to_json(node)
-    msg.stamp = get_current_ros_time()
+    msg.stamp = get_current_ros_time(node.children[-1].start_time)
     msg.resolved_from_id = str(hash(node))
 
     desig_resolution_finished.publish(msg)
