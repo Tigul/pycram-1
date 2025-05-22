@@ -3,13 +3,15 @@ from functools import lru_cache
 
 from ..designators.action_designator import *
 from ..designators.object_designator import *
+from ..designator import ObjectDesignatorDescription
+from ..datastructures.grasp import GraspDescription
 from ..plan import ActionNode, DesignatorNode, ResolvedActionNode, PlanNode
-from ..ros import create_publisher
+from ..ros import create_publisher, create_action_client
 from ..ros import Time as ROSTime
 
 try:
-    from knowrob_designator.msg import DesignatorExecutionFinished, DesignatorExecutionStart, DesignatorInit, \
-        DesignatorResolutionFinished, DesignatorResolutionStart, ObjectDesignator
+    from knowrob_designator.msg import DesignatorExecutionFinished, DesignatorExecutionStart, DesignatorInit, DesignatorResolutionFinished, DesignatorResolutionStart, PushObjectDesignator
+    from knowrob_designator.action import DesignatorQueryIncremental_SendGoal_Request, DesignatorQueryIncremental
 except ImportError:
     loginfo("Could not import knowrob_designator.msg")
 
@@ -18,7 +20,11 @@ desig_execution_finished = create_publisher("knowrob/designator_execution_finish
 desig_resolution_start = create_publisher("knowrob/designator_resolving_started", DesignatorResolutionStart)
 desig_resolution_finished = create_publisher("knowrob/designator_resolving_finished", DesignatorResolutionFinished)
 desig_init = create_publisher("/knowrob/designator/push_object_designator", DesignatorInit)
-object_desig = create_publisher("knowrob/object_designator", ObjectDesignator)
+object_desig = create_publisher("knowrob/object_designator", PushObjectDesignator)
+
+query_client = create_action_client("knowrob/designator_query_incremental", DesignatorQueryIncremental)
+
+query_results = {"PyCRAP.Milk": "fridge_main", "PyCRAP.Spoon": "kitchen_drawer", "PyCRAP.Bowl": "cupboard"}
 
 @lru_cache(maxsize=None)
 def init_object_state():
@@ -29,11 +35,14 @@ def init_object_state():
     for obj in World.current_world.objects:
         obj_json = {"anObject": {"type": str(obj.obj_type), "links": [link for link in obj.links.keys()]}}
 
-        msg = ObjectDesignator()
+        msg = PushObjectDesignator()
         msg.json_designator = str(obj_json)
         split_time = str(datetime.now().timestamp()).split(".")
-        msg.start = ROSTime(int(split_time[0]), int(split_time[1]))
+        msg.stamp = ROSTime(int(split_time[0]), int(split_time[1]))
+        print("--->", msg.stamp)
+        print(ROSTime().now())
         object_desig.publish(msg)
+        print("Publishing object state to knowrob: ", obj_json)
 
 
 def pose_to_json(pose: PoseStamped) -> Dict[str, Union[float, str]]:
@@ -46,7 +55,7 @@ def pose_to_json(pose: PoseStamped) -> Dict[str, Union[float, str]]:
             "ry": pose.orientation.y, "rz": pose.orientation.z, "rw": pose.orientation.w, "frame": pose.header.frame_id}
 
 
-def object_to_json(obj: Union[ObjectDesignator, Object]) -> Dict[str, Dict[str, str]]:
+def object_to_json(obj: Union[ObjectDesignatorDescription, Object]) -> Dict[str, Dict[str, str]]:
     """
     Converts an object or object designator to a JSON-like dictionary containing its type.
 
@@ -136,6 +145,7 @@ def execution_finished_callback(node: PlanNode):
     msg.designator_id = str(hash(node))
     msg.json_designator = designator_to_json(node)
     msg.stamp = get_current_ros_time()
+    print("Execution finished callback")
 
     desig_execution_finished.publish(msg)
 
@@ -151,7 +161,7 @@ def resolution_start_callback(node: PlanNode):
     msg.designator_id = str(hash(node))
     msg.json_designator = designator_to_json(node)
     msg.stamp = get_current_ros_time()
-
+    print("Resolution start callback")
     desig_resolution_start.publish(msg)
 
 
@@ -176,3 +186,50 @@ Plan.add_on_start_callback(execution_start_callback, ResolvedActionNode)
 
 Plan.add_on_end_callback(resolution_finished_callback, ActionNode)
 Plan.add_on_end_callback(execution_finished_callback, ResolvedActionNode)
+
+
+def query_for_object_storage(obj_type: Type[PhysicalObject]):
+    """
+    Queries knowrob for the storage location of an object of a specific type.
+    {"anAction":
+        {
+            "type" : "searching"
+            "anObject" : {"type" : "Milk"}
+            "aLocation" : {"?x" : {"insideOf" : { "anObject" ; {"URDFLink" : "?_"}}}}
+        }
+    }
+
+    :return: The link where the object is stored.
+    """
+
+    msg = DesignatorQueryIncremental.Goal()
+    msg.query_type = "check"
+    msg.query_id = "1"
+    desig_json = "{'anAction': {'type': 'searching', 'anObject': {'type': 'OBJ_TYPE'}, 'aLocation': {'?x': {'insideOf': {'anObject': {'URDFLink': '?_'}}}}}}"
+    desig_json.replace("OBJ_TYPE", str(obj_type))
+    msg.designator_json = desig_json
+
+    # result = query_client.send_goal(msg)
+    result = mock_action_server(msg)
+    if result.success:
+        result_link = result.binding_as_json["?x"]["insideOf"]["anObject"]["URDFLink"]
+        return result_link
+    else:
+        loginfo("Query failed")
+
+
+
+def mock_action_server(msg: DesignatorQueryIncremental.Goal):
+    """
+    Mock action server for the DesignatorQueryIncremental action. It simulates the behavior of the action server by
+    returning a result immediately.
+
+    :param msg: The message received from the action client.
+    :return: The result of the action.
+    """
+    result = DesignatorQueryIncremental.Result()
+    result.success = True
+    result.query_id = msg.query_id
+    result_string = '{"?x" : {"aLocation" : {"insideOf" : { "anObject" ; {"URDFLink" : "?_"}}}}}'
+    result.binding_as_json = result_string.replace("?_", query_results.get(msg.designator_json, "unknown"))
+    return result
