@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from functools import lru_cache
 
@@ -39,10 +40,8 @@ def init_object_state():
         msg.json_designator = str(obj_json)
         split_time = str(datetime.now().timestamp()).split(".")
         msg.stamp = ROSTime(int(split_time[0]), int(split_time[1]))
-        print("--->", msg.stamp)
-        print(ROSTime().now())
+
         object_desig.publish(msg)
-        print("Publishing object state to knowrob: ", obj_json)
 
 
 def pose_to_json(pose: PoseStamped) -> Dict[str, Union[float, str]]:
@@ -145,7 +144,6 @@ def execution_finished_callback(node: PlanNode):
     msg.designator_id = str(hash(node))
     msg.json_designator = designator_to_json(node)
     msg.stamp = get_current_ros_time()
-    print("Execution finished callback")
 
     desig_execution_finished.publish(msg)
 
@@ -161,7 +159,6 @@ def resolution_start_callback(node: PlanNode):
     msg.designator_id = str(hash(node))
     msg.json_designator = designator_to_json(node)
     msg.stamp = get_current_ros_time()
-    print("Resolution start callback")
     desig_resolution_start.publish(msg)
 
 
@@ -171,9 +168,9 @@ def resolution_finished_callback(node: PlanNode):
     containing the designator that has just finished resolving.
     """
     msg = DesignatorResolutionFinished()
-    msg.designator_id = str(hash(node.children[-1]))
+    msg.designator_id = str(hash(node))
     msg.json_designator = designator_to_json(node)
-    msg.stamp = get_current_ros_time(node.children[-1].start_time)
+    msg.stamp = get_current_ros_time(node.children[-1].start_time) if node.children else get_current_ros_time()
     msg.resolved_from_id = str(hash(node))
 
     desig_resolution_finished.publish(msg)
@@ -212,7 +209,8 @@ def query_for_object_storage(obj_type: Type[PhysicalObject]):
     # result = query_client.send_goal(msg)
     result = mock_action_server(msg)
     if result.success:
-        result_link = result.binding_as_json["?x"]["insideOf"]["anObject"]["URDFLink"]
+        result_json = json.loads(result.binding_as_json)
+        result_link = result_json["?x"]["aLocation"]["insideOf"]["anObject"]["URDFLink"]
         return result_link
     else:
         loginfo("Query failed")
@@ -230,6 +228,6 @@ def mock_action_server(msg: DesignatorQueryIncremental.Goal):
     result = DesignatorQueryIncremental.Result()
     result.success = True
     result.query_id = msg.query_id
-    result_string = '{"?x" : {"aLocation" : {"insideOf" : { "anObject" ; {"URDFLink" : "?_"}}}}}'
+    result_string = '{"?x" : {"aLocation" : {"insideOf" : { "anObject" : {"URDFLink" : "?_"}}}}}'
     result.binding_as_json = result_string.replace("?_", query_results.get(msg.designator_json, "unknown"))
     return result
