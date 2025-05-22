@@ -8,7 +8,13 @@ def to_sec(self):
     """
     return self.sec
 
+@classmethod
+def now(cls):
+    return builtin_interfaces.msg.Time(**dict(zip(["sec", "nanosec"], node.get_clock().now().seconds_nanoseconds())))
+
+
 builtin_interfaces.msg.Time.to_sec = to_sec
+builtin_interfaces.msg.Time.now = now
 
 import rclpy
 import threading
