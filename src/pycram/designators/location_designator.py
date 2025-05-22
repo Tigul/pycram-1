@@ -479,6 +479,7 @@ class KnowledgeLocation(LocationDesignatorDescription):
 
         :yield: A location designator for the object
         """
+        raise NotImplementedError
         for params in self.generate_permutations():
             params_box = Box(params)
             yield params_box.object_type
