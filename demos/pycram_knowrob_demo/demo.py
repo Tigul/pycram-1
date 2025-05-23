@@ -10,13 +10,13 @@ from pycram.world_concepts.world_object import Object
 
 from pycrap.ontologies import Robot, Milk
 
-world = BulletWorld(WorldMode.GUI)
+world = BulletWorld(WorldMode.DIRECT)
 
 pr2 = Object("pr2", Robot, "pr2.urdf")
 
 plan = SequentialPlan(
     TransportActionDescription(
-        ResolutionStrategyObject(SearchActionDescription(KnowledgeLocation(Milk), Milk)),
+        ResolutionStrategyObject(strategy=SearchActionDescription(KnowledgeLocation(Milk), Milk)),
     PoseStamped.from_list([4, 5, 1])),
 )
 

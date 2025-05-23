@@ -64,6 +64,7 @@ class ResolutionStrategyObject(ObjectDesignatorDescription):
         """
         super().__init__()
         self.strategy = strategy
+        self.types = [strategy.root.kwargs.get("object_type", None)] or []
 
     def create_iterator(self, resolution_strategy: Union[Callable, Iterable]):
         """

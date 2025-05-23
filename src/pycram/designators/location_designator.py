@@ -22,6 +22,7 @@ from ..ros import logdebug
 from ..world_concepts.world_object import Object, Link
 from ..world_reasoning import link_pose_for_joint_config, contact, is_held_object, prospect_robot_contact
 from ..config.action_conf import ActionConfig
+from ..external_interfaces.knowrob import query_for_object_storage
 
 
 class Location(LocationDesignatorDescription):
@@ -479,9 +480,13 @@ class KnowledgeLocation(LocationDesignatorDescription):
 
         :yield: A location designator for the object
         """
-        raise NotImplementedError
         for params in self.generate_permutations():
             params_box = Box(params)
-            yield params_box.object_type
+            storage_link = query_for_object_storage(params_box.object_type)
+
+            for obj in World.current_world.objects:
+                if storage_link in obj.links:
+                    yield obj.links[storage_link].pose
+
 
 
