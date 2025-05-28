@@ -25,7 +25,7 @@ object_desig = create_publisher("knowrob/object_designator", PushObjectDesignato
 
 query_client = create_action_client("knowrob/designator_query_incremental", DesignatorQueryIncremental)
 
-query_results = {"PyCRAP.Milk": "fridge_main", "PyCRAP.Spoon": "kitchen_drawer", "PyCRAP.Bowl": "cupboard"}
+query_results = {"PyCRAP.Milk": "cabinet3", "PyCRAP.Spoon": "cabinet10_drawer_top", "PyCRAP.Bowl": "island_countertop"}
 
 @lru_cache(maxsize=None)
 def init_object_state():
@@ -34,7 +34,7 @@ def init_object_state():
     will only be called once, and the result will be cached for future calls.
     """
     for obj in World.current_world.objects:
-        obj_json = {"anObject": {"type": str(obj.obj_type), "links": [link for link in obj.links.keys()]}}
+        obj_json = {"anObject": {"type": str(obj.obj_type), "links": [(link_name, type(link.ontology_individual)) for link_name, link in obj.links.items()]}}
 
         msg = PushObjectDesignator()
         msg.json_designator = str(obj_json)
@@ -202,8 +202,7 @@ def query_for_object_storage(obj_type: Type[PhysicalObject]):
     msg = DesignatorQueryIncremental.Goal()
     msg.query_type = "check"
     msg.query_id = "1"
-    desig_json = "{'anAction': {'type': 'searching', 'anObject': {'type': 'OBJ_TYPE'}, 'aLocation': {'?x': {'insideOf': {'anObject': {'URDFLink': '?_'}}}}}}"
-    desig_json.replace("OBJ_TYPE", str(obj_type))
+    desig_json = "{'anAction': {'type': 'searching', 'anObject': {'type': 'OBJ_TYPE'}, 'aLocation': {'?x': {'insideOf': {'anObject': {'URDFLink': '?_'}}}}}}".replace("OBJ_TYPE", str(obj_type))
     msg.designator_json = desig_json
 
     # result = query_client.send_goal(msg)
@@ -229,5 +228,6 @@ def mock_action_server(msg: DesignatorQueryIncremental.Goal):
     result.success = True
     result.query_id = msg.query_id
     result_string = '{"?x" : {"aLocation" : {"insideOf" : { "anObject" : {"URDFLink" : "?_"}}}}}'
-    result.binding_as_json = result_string.replace("?_", query_results.get(msg.designator_json, "unknown"))
+    obj_type = json.loads(msg.designator_json.replace( "'", '"'))["anAction"]["anObject"]["type"]
+    result.binding_as_json = result_string.replace("?_", query_results.get(obj_type, "unknown"))
     return result
