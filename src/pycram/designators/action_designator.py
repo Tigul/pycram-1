@@ -25,7 +25,7 @@ from ..tf_transformations import quaternion_from_euler
 from typing_extensions import List, Union, Optional, Type, Dict, Any, Iterable
 
 from pycrap.ontologies import Location, PhysicalObject
-from .location_designator import CostmapLocation
+from .location_designator import CostmapLocation, AccessingLocation
 from .motion_designator import MoveJointsMotion, MoveGripperMotion, MoveTCPMotion, MoveMotion, \
     LookingMotion, DetectingMotion, OpeningMotion, ClosingMotion
 from ..datastructures.grasp import GraspDescription
@@ -1156,6 +1156,23 @@ class SearchAction(ActionDescription):
     """
 
     def plan(self) -> None:
+        containing_bodies = World.current_world.objects_containing_pose(self.target_location)
+        if containing_bodies:
+            for contained_body in containing_bodies:
+                links_below = contained_body.get_links_below()
+                for link in links_below:
+                    if "handle" in link.name:
+                        SequentialPlan(
+                            NavigateActionDescription(AccessingLocation(link, World.robot, [Arms.LEFT, Arms.RIGHT])),
+                            OpenActionDescription(link, Arms.LEFT),
+                        ).perform()
+                        return self.search()
+        else:
+            return self.search()
+
+
+
+    def search(self):
         NavigateActionDescription(
             CostmapLocation(target=self.target_location, visible_for=World.robot)).resolve().perform()
 

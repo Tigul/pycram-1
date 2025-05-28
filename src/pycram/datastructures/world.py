@@ -6,8 +6,10 @@ import threading
 import time
 from abc import ABC, abstractmethod
 from copy import copy
+from os.path import dirname
 
 import numpy as np
+from ripple_down_rules.rdr_decorators import RDRDecorator
 from trimesh import Trimesh
 from typing_extensions import List, Optional, Dict, Tuple, Callable, TYPE_CHECKING, Union, Type, deprecated
 
@@ -84,6 +86,8 @@ class World(WorldEntity, ABC):
     """
     The ontology of this world.
     """
+
+    rdr_decorator: RDRDecorator = RDRDecorator(dirname(__file__) + "/../ripple_down_rules/", PhysicalBody, False, fit=False)
 
     def __init__(self, mode: WorldMode = WorldMode.DIRECT, is_prospection: bool = False, clear_cache: bool = False,
                  id_: int = -1):
@@ -1746,6 +1750,10 @@ class World(WorldEntity, ABC):
         """
         if self.conf.use_physics_simulator_state:
             self.original_state.simulator_state_id = self.save_physics_simulator_state(use_same_id=use_same_id)
+
+    @rdr_decorator.decorator
+    def objects_containing_pose(self, pose: PoseStamped) -> List[ObjectDescription.Link]:
+        pass
 
     @property
     def original_state(self) -> WorldState:
