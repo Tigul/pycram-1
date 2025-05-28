@@ -1,0 +1,111 @@
+{
+    "_type": "ripple_down_rules.rdr.GeneralRDR",
+    "start_rules": {
+        "output_": {
+            "_type": "ripple_down_rules.rdr.MultiClassRDR",
+            "start_rule": {
+                "_type": "ripple_down_rules.rules.MultiClassTopRule",
+                "conditions": {
+                    "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
+                    "user_input": "def _get_value(case):\n    def conditions_for_world_objects_containing_pose(self_: BulletWorld, pose: PoseStamped, output_: PhysicalBody) -> bool:\n        \"\"\"Get conditions on whether it's possible to conclude a value for World_objects_containing_pose.output_  of type PhysicalBody.\"\"\"\n        return len(World.current_world.objects) >= 2\n    return conditions_for_world_objects_containing_pose(**case)\n    ",
+                    "conclusion_type": [
+                        "builtins.bool"
+                    ],
+                    "scope": {
+                        "PoseStamped": "pycram.datastructures.pose.PoseStamped",
+                        "BulletWorld": "pycram.worlds.bullet_world.BulletWorld",
+                        "PhysicalBody": "pycram.datastructures.world_entity.PhysicalBody",
+                        "World": "pycram.datastructures.world.World"
+                    },
+                    "conclusion": {
+                        "_type": "builtins.NoneType",
+                        "value": null
+                    },
+                    "mutually_exclusive": false
+                },
+                "conclusion": {
+                    "_type": "ripple_down_rules.datastructures.callable_expression.CallableExpression",
+                    "user_input": "def _get_value(case):\n    def world_objects_containing_pose(self_: BulletWorld, pose: PoseStamped, output_: PhysicalBody) -> List[PhysicalBody]:\n        \"\"\"Get possible value(s) for World_objects_containing_pose.output_  of type PhysicalBody.\"\"\"\n        # Write your code here\n        result = []\n        for obj in self_.objects:\n            for link in obj.links.values():\n                if link.get_axis_aligned_bounding_box().contains(*pose.position.to_list()):\n                    result.append(link)\n        return result\n    return world_objects_containing_pose(**case)\n    ",
+                    "conclusion_type": [
+                        "pycram.datastructures.world_entity.PhysicalBody",
+                        "builtins.set",
+                        "builtins.list"
+                    ],
+                    "scope": {
+                        "PoseStamped": "pycram.datastructures.pose.PoseStamped",
+                        "BulletWorld": "pycram.worlds.bullet_world.BulletWorld",
+                        "PhysicalBody": "pycram.datastructures.world_entity.PhysicalBody",
+                        "List": "typing.List"
+                    },
+                    "conclusion": {
+                        "_type": "builtins.NoneType",
+                        "value": null
+                    },
+                    "mutually_exclusive": false
+                },
+                "parent": null,
+                "corner_case": {
+                    "_type": "ripple_down_rules.datastructures.case.Case",
+                    "self_": null,
+                    "pose": {
+                        "$id": "2c4ddcee-c304-4e0d-ac95-0bec7c7cb44d",
+                        "__dataclass__": "pycram.datastructures.pose.PoseStamped",
+                        "fields": {
+                            "pose": {
+                                "$id": "aa544217-bb6c-48aa-84ea-a30bd8b5a5df",
+                                "__dataclass__": "pycram.datastructures.pose.Pose",
+                                "fields": {
+                                    "position": {
+                                        "$id": "c82f43ba-1fea-4406-aa73-1648d2e7a1e9",
+                                        "__dataclass__": "pycram.datastructures.pose.Vector3",
+                                        "fields": {
+                                            "x": 1.5,
+                                            "y": -1,
+                                            "z": 1
+                                        }
+                                    },
+                                    "orientation": {
+                                        "$id": "062040a4-aa55-4f69-85f1-89c86607da32",
+                                        "__dataclass__": "pycram.datastructures.pose.Quaternion",
+                                        "fields": {
+                                            "x": 0.0,
+                                            "y": 0.0,
+                                            "z": 0.0,
+                                            "w": 1.0
+                                        }
+                                    }
+                                }
+                            },
+                            "header": {
+                                "$id": "7311aacc-38b8-4b9e-bdae-33bd3a70f025",
+                                "__dataclass__": "pycram.datastructures.pose.Header",
+                                "fields": {
+                                    "frame_id": "map",
+                                    "stamp": null,
+                                    "sequence": 0
+                                }
+                            }
+                        }
+                    },
+                    "output_": null,
+                    "_id": 125470912668096,
+                    "_obj_type": "builtins.dict",
+                    "_name": "World_objects_containing_pose"
+                },
+                "conclusion_name": "output_",
+                "weight": "next",
+                "uid": "337033937356385007460072279108940985389",
+                "refinement": null,
+                "alternative": null
+            },
+            "generated_python_file_name": "world_objects_containing_pose_output__mcrdr",
+            "name": "output_",
+            "case_type": "typing.Dict",
+            "case_name": "World_objects_containing_pose"
+        }
+    },
+    "generated_python_file_name": "world_objects_containing_pose_rdr",
+    "name": "output_",
+    "case_type": "typing.Dict",
+    "case_name": "World_objects_containing_pose"
+}
