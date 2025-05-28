@@ -4,10 +4,12 @@ import copy
 import os
 import pathlib
 import xml.etree.ElementTree as ET
+from functools import cached_property
 
+import networkx as nx
 import numpy as np
 from ..tf_transformations import quaternion_from_euler, euler_from_quaternion
-from typing_extensions import Union, List, Optional, Dict, Tuple, Type, Self
+from typing_extensions import Union, List, Optional, Dict, Tuple, Type, Self, Hashable, Any
 from urdf_parser_py import urdf
 from urdf_parser_py.urdf import (URDF, Collision, Box as URDF_Box, Cylinder as URDF_Cylinder,
                                  Sphere as URDF_Sphere, Mesh as URDF_Mesh)
@@ -240,6 +242,29 @@ class ObjectDescription(AbstractObjectDescription):
         if self._joint_map is None:
             self._init_joints_map()
         return self._joint_map
+
+    @cached_property
+    def link_tree(self) -> nx.DiGraph:
+        """
+        Constructs a directed graph representing the hierarchy of links and joints in the object description.
+
+        :return: A networkx directed graph where nodes are link names and edges represent joints between links.
+        """
+        tree = nx.DiGraph()
+        tree.add_nodes_from(self.links)
+        for link, (joint, parent) in self.parsed_description.parent_map.items():
+            tree.add_edge(self.link_map[parent], self.link_map[link], joint=joint)
+        return tree
+
+    def get_links_below_link(self, link_name: str) -> nx.DiGraph:
+        """
+        Get a directed graph of all links below the given link in the hierarchy.
+
+        :param link_name: The name of the link to get the subtree for.
+        :return: A directed graph containing all links below the given link.
+        """
+        subgraph = self.link_tree.subgraph(nx.descendants(self.link_tree, self.link_map[link_name]) | {self.link_map[link_name]})
+        return subgraph
 
     def _init_joints_map(self) -> None:
         self._joint_map = {joint.name: joint for joint in self.joints}

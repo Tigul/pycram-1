@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import os
 
+import networkx as nx
 import numpy as np
 import pathlib
 from abc import ABC, abstractmethod
@@ -450,6 +451,19 @@ class Link(PhysicalBody, ObjectEntity, LinkDescription, ABC):
         """
         return self.origin.to_transform_stamped(self.tf_frame)
 
+    def get_links_below(self) -> nx.DiGraph:
+        """
+        Creates a graph of all links below this link in the hierarchy.
+
+        :return: A networkx directed graph containing all links below this link.
+        """
+        all_links = self.parent_entity.links
+        sub_graph = self.parent_entity.description.get_links_below_link(self.name)
+        new_grap = nx.DiGraph()
+        new_grap.add_nodes_from([all_links[link_name.name] for link_name in sub_graph.nodes])
+        new_grap.add_edges_from([(all_links[link_name.name], all_links[child_name.name]) for link_name, child_name in sub_graph.edges])
+        return new_grap
+
     @property
     def pose(self) -> PoseStamped:
         """
@@ -494,6 +508,7 @@ class Link(PhysicalBody, ObjectEntity, LinkDescription, ABC):
 
     def __copy__(self):
         return Link(self.id, self.description, self.object)
+
 
 
 class RootLink(Link, ABC):
