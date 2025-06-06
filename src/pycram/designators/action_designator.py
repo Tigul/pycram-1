@@ -1163,18 +1163,24 @@ class SearchAction(ActionDescription):
                 for link in links_below:
                     if "handle" in link.name:
                         SequentialPlan(
-                            NavigateActionDescription(AccessingLocation(link, World.robot, [Arms.LEFT, Arms.RIGHT])),
+                            NavigateActionDescription(CostmapLocation(link, reachable_for=World.robot, reachable_arm=Arms.LEFT)),
                             OpenActionDescription(link, Arms.LEFT),
                         ).perform()
-                        return self.search()
+                        try:
+                            return self.search()
+                        except PerceptionObjectNotFound:
+                            SequentialPlan(CloseActionDescription(link, Arms.LEFT)).perform()
         else:
             return self.search()
 
 
 
     def search(self):
-        NavigateActionDescription(
-            CostmapLocation(target=self.target_location, visible_for=World.robot)).resolve().perform()
+        try:
+            NavigateActionDescription(
+                CostmapLocation(target=self.target_location, visible_for=World.robot)).resolve().perform()
+        except Exception:
+            raise PerceptionObjectNotFound(self.object_type, DetectionTechnique.TYPES, self.target_location)
 
         lt = LocalTransformer()
         target_base = lt.transform_pose(self.target_location, World.robot.tf_frame)

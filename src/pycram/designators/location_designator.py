@@ -1,4 +1,5 @@
 import dataclasses
+import time
 
 import numpy as np
 from box import Box
@@ -6,7 +7,7 @@ from typing_extensions import List, Union, Iterable, Optional, Callable, Iterato
 
 from pycrap.ontologies import PhysicalObject
 from .object_designator import ObjectPart
-from ..costmaps import OccupancyCostmap, VisibilityCostmap, SemanticCostmap, GaussianCostmap, Costmap
+from ..costmaps import OccupancyCostmap, VisibilityCostmap, SemanticCostmap, GaussianCostmap, Costmap, plot_grid
 from ..datastructures.enums import JointType, Arms, Grasp
 from ..datastructures.partial_designator import PartialDesignator
 from ..datastructures.pose import PoseStamped, GraspDescription, GraspPose
@@ -204,10 +205,14 @@ class CostmapLocation(LocationDesignatorDescription):
             else:
                 test_robot = World.current_world.robot
 
+
             allowed_collision = self.create_allowed_collisions(params_box.ignore_collision_with,
                                                                params_box.object_in_hand)
 
             final_map = self.setup_costmaps(target, test_robot, params_box.visible_for, params_box.reachable_for)
+
+            if isinstance(params_box.target, Object):
+                target = World.current_world.get_prospection_object_for_object(params_box.target)
 
             with UseProspectionWorld():
                 for pose_candidate in PoseGenerator(final_map, number_of_samples=600):

@@ -213,12 +213,34 @@ class DefaultOpen(ProcessModule):
         container_joint_name = part_of_object.find_joint_above_link(desig.object_part.name)
         lower_limit, upper_limit = part_of_object.get_joint_limits(container_joint_name)
 
+        init_pose = desig.object_part.pose
+
         goal_pose = link_pose_for_joint_config(part_of_object, {
             container_joint_name: max(lower_limit, upper_limit - 0.05)}, desig.object_part.name)
 
-        _move_arm_tcp(goal_pose, World.robot, desig.arm)
+        # _move_arm_tcp(goal_pose, World.robot, desig.arm)
 
         part_of_object.set_joint_position(container_joint_name, upper_limit)
+
+        World.robot.set_pose(self.create_robot_goal_pose(init_pose, goal_pose))
+
+    def create_robot_goal_pose(self, init_pose: PoseStamped, goal_pose: PoseStamped) -> PoseStamped:
+        """
+        creates the transform from the initial pose to the goal pose of the robot and returns it as PoseStamped.
+        :param init_pose:
+        :param goal_pose:
+        :return:
+        """
+        init_transform = init_pose.to_transform_stamped("handle")
+        goal_transform = goal_pose.to_transform_stamped("handle")
+
+        transform = ~init_transform * goal_transform
+
+        robot_pose = World.robot.pose
+        robot_transform = robot_pose.to_transform_stamped(World.robot.tf_frame)
+        robot_goal_transform = robot_transform * transform
+        robot_goal_pose = robot_goal_transform.to_pose_stamped()
+        return robot_goal_pose
 
 
 class DefaultClose(ProcessModule):
@@ -232,12 +254,34 @@ class DefaultClose(ProcessModule):
         container_joint_name = part_of_object.find_joint_above_link(desig.object_part.name)
         lower_joint_limit = part_of_object.get_joint_limits(container_joint_name)[0]
 
+        init_pose = desig.object_part.pose
+
         goal_pose = link_pose_for_joint_config(part_of_object, {
             container_joint_name: lower_joint_limit}, desig.object_part.name)
 
-        _move_arm_tcp(goal_pose, World.robot, desig.arm)
+        # _move_arm_tcp(goal_pose, World.robot, desig.arm)
 
         part_of_object.set_joint_position(container_joint_name, lower_joint_limit)
+
+        World.robot.set_pose(self.create_robot_goal_pose(init_pose, goal_pose))
+
+    def create_robot_goal_pose(self, init_pose: PoseStamped, goal_pose: PoseStamped) -> PoseStamped:
+        """
+        creates the transform from the initial pose to the goal pose of the robot and returns it as PoseStamped.
+        :param init_pose:
+        :param goal_pose:
+        :return:
+        """
+        init_transform = init_pose.to_transform_stamped("handle")
+        goal_transform = goal_pose.to_transform_stamped("handle")
+
+        transform = ~init_transform * goal_transform
+
+        robot_pose = World.robot.pose
+        robot_transform = robot_pose.to_transform_stamped(World.robot.tf_frame)
+        robot_goal_transform = robot_transform * transform
+        robot_goal_pose = robot_goal_transform.to_pose_stamped()
+        return robot_goal_pose
 
 
 class DefaultMoveTCPWaypoints(ProcessModule):

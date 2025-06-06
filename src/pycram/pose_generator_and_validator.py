@@ -118,12 +118,12 @@ def visibility_validator(robot: Object,
     :param object_or_pose: The target position or object for which the pose candidate should be validated.
     :return: True if the target is visible for the robot, None in any other case.
     """
-    world = robot.world
+    world = World.current_world
     robot_pose = robot.get_pose()
 
     if isinstance(object_or_pose, PoseStamped):
-        gen_obj_desc = ObjectDescription("viz_object", [0, 0, 0], [0.02, 0.02, 0.02])
-        obj = Object("viz_object", PhysicalObject, pose=object_or_pose, description=gen_obj_desc)
+        gen_obj_desc = ObjectDescription("viz_object", [0, 0, 0], [0.1, 0.1, 0.1])
+        obj = Object("viz_object", PhysicalObject, pose=object_or_pose, description=gen_obj_desc, world=world)
     else:
         obj = object_or_pose
 
@@ -135,7 +135,6 @@ def visibility_validator(robot: Object,
     robot.set_pose(robot_pose)
     if isinstance(object_or_pose, PoseStamped):
         world.remove_object(obj)
-
     return ray.obj_id == obj_id
 
 

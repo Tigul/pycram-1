@@ -662,7 +662,14 @@ def lazy_product(*iterables: Iterable) -> Iterable[Tuple]:
 
     consumable_iterables = [iter(iterable) for iterable in iterables]
 
-    current_value = [next(consumable_iterable) for consumable_iterable in consumable_iterables]
+    current_value = []
+    for consumable_iterable in consumable_iterables:
+        try:
+            current_value.append(next(consumable_iterable))
+        except StopIteration:
+            raise StopIteration(f"No values in the iterable: {consumable_iterable}")
+
+    # current_value = [next(consumable_iterable) for consumable_iterable in consumable_iterables]
 
     while True:
         yield tuple(current_value)

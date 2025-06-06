@@ -25,7 +25,7 @@ object_desig = create_publisher("knowrob/object_designator", PushObjectDesignato
 
 query_client = create_action_client("knowrob/designator_query_incremental", DesignatorQueryIncremental)
 
-query_results = {"PyCRAP.Milk": "cabinet3", "PyCRAP.Spoon": "cabinet10_drawer_top", "PyCRAP.Bowl": "island_countertop"}
+query_results = {"PyCRAP.Milk": "fridge_main", "PyCRAP.Spoon": "cabinet10_drawer_top", "PyCRAP.Bowl": "island_countertop"}
 
 @lru_cache(maxsize=None)
 def init_object_state():
