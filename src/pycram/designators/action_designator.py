@@ -658,7 +658,7 @@ class TransportAction(ActionDescription):
         ParkArmsActionDescription(Arms.BOTH).perform()
         pickup_loc = CostmapLocation(target=self.object_designator,
                                      reachable_for=robot_desig_resolved,
-                                     reachable_arm=[self.arm])
+                                    reachable_arm=self.arm)
         # Tries to find a pick-up position for the robot that uses the given arm
         pickup_pose = pickup_loc.resolve()
         if not pickup_pose:
@@ -679,9 +679,9 @@ class TransportAction(ActionDescription):
             ).resolve()
         except StopIteration:
             raise ReachabilityFailure(
-                f"No location found from where the robot can reach the target location: {self.target_location}")
+                f"No location found from where the robot can reach the target location: {self.target_location}", World.robot, self.arm, pickup_pose.grasp_description)
         NavigateActionDescription(place_loc, True).perform()
-        PlaceActionDescription(self.object_designator, self.target_location, self.arm).perform()
+        PlaceActionDescription(self.object_designator, self.target_location, pickup_pose.arm).perform()
         ParkArmsActionDescription(Arms.BOTH).perform()
 
     def validate(self, result: Optional[Any] = None, max_wait_time: Optional[timedelta] = None):
@@ -1193,6 +1193,7 @@ class SearchAction(ActionDescription):
 
         plan = TryInOrderPlan(
             SequentialPlan(
+                ParkArmsActionDescription(Arms.BOTH),
                 LookAtActionDescription(target_base_left),
                 DetectActionDescription(DetectionTechnique.TYPES,
                                         object_designator=BelieveObject(types=[self.object_type]))),

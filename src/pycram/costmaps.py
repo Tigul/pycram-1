@@ -438,8 +438,8 @@ class OccupancyCostmap(Costmap):
         indices = np.concatenate(np.dstack(np.mgrid[int(-size / 2):int(size / 2), int(-size / 2):int(size / 2)]),
                                  axis=0) * resolution + np.array(origin_position[:2])
         # Add the z-coordinate to the grid, which is either 0 or 10
-        indices_0 = np.pad(indices, (0, 1), mode='constant', constant_values=10)[:-1]
-        indices_10 = np.pad(indices, (0, 1), mode='constant', constant_values=-0.1)[:-1]
+        indices_0 = np.pad(indices, (0, 1), mode='constant', constant_values=0)[:-1]
+        indices_10 = np.pad(indices, (0, 1), mode='constant', constant_values=10)[:-1]
         # Zips both arrays such that there are tuples for every coordinate that
         # only differ in the z-coordinate
         rays = np.dstack(np.dstack((indices_0, indices_10))).T

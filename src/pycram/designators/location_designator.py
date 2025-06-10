@@ -194,6 +194,9 @@ class CostmapLocation(LocationDesignatorDescription):
 
            :yield: An instance of CostmapLocation.Location with a valid position that satisfies the given constraints
            """
+        if World.current_world.is_prospection_world:
+            normal_world = World.current_world.world_sync.world
+            World.current_world = normal_world
         for params in self.generate_permutations():
             params_box = Box(params)
             # Target is either a pose or an object since the object is later needed for the visibility validator

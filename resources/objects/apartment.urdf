@@ -882,6 +882,7 @@
     <parent link="fridge_main"/>
     <child link="fridge_bottom_side"/>
   </joint>
+  <!--
   <link name="fridge_level1">
     <visual>
       <geometry>
@@ -898,7 +899,7 @@
     <origin rpy="0 0 0" xyz="0.1 0. 0.1"/>
     <parent link="fridge_main"/>
     <child link="fridge_level1"/>
-  </joint>
+  </joint> -->
   <joint name="fridge_area_door_top_out_joint" type="revolute">
     <origin rpy="0 0 3.14" xyz="0.39 -0.3 0.5"/>
     <parent link="fridge_main"/>

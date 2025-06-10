@@ -623,8 +623,8 @@ class Transform(Pose):
         """
         self_matrix = self.to_matrix()
         other_matrix = other.to_matrix()
-        # multiplication = self_matrix @ other_matrix
-        multiplication = other_matrix @ self_matrix
+        multiplication = self_matrix @ other_matrix
+        # multiplication = other_matrix @ self_matrix
         return Transform.from_matrix(multiplication)
 
     @classmethod
