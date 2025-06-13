@@ -23,8 +23,11 @@ desig_resolution_finished = create_publisher("knowrob/designator_resolving_finis
 desig_init = create_publisher("/knowrob/designator/push_object_designator", DesignatorInit)
 object_desig = create_publisher("knowrob/object_designator", PushObjectDesignator)
 
-query_client = create_action_client("knowrob/designator_query_incremental", DesignatorQueryIncremental)
-
+try:
+    query_client = create_action_client("knowrob/designator_query_incremental", DesignatorQueryIncremental)
+except Exception as e:
+    loginfo(f"Could not create action client for knowrob/designator_query_incremental: {e}")
+    query_client = None
 query_results = {"PyCRAP.Milk": "fridge_main", "PyCRAP.Spoon": "cabinet10_drawer_top", "PyCRAP.Bowl": "island_countertop"}
 
 @lru_cache(maxsize=None)
