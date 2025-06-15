@@ -9,7 +9,7 @@ repositories:
     version: master
   pycram:
     type: git
-    url: https://github.com/Tigul/pycram-1.git
+    url: https://github.com/sasjonge/pycram-1.git
     version: knowrob-demo
   kdl_ik_services:
     type: git
