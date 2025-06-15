@@ -15,14 +15,14 @@ try:
 except ImportError:
     loginfo("Could not import knowrob_designator.msg")
 
-desig_execution_start = create_publisher("knowrob/designator_execution_started", DesignatorExecutionStart)
-desig_execution_finished = create_publisher("knowrob/designator_execution_finished", DesignatorExecutionFinished)
-desig_resolution_start = create_publisher("knowrob/designator_resolving_started", DesignatorResolutionStart)
-desig_resolution_finished = create_publisher("knowrob/designator_resolving_finished", DesignatorResolutionFinished)
-desig_init = create_publisher("/knowrob/designator/push_object_designator", DesignatorInit)
-object_desig = create_publisher("knowrob/object_designator", PushObjectDesignator)
+desig_execution_start = create_publisher("/knowrob/designator/execution_start", DesignatorExecutionStart)
+desig_execution_finished = create_publisher("/knowrob/designator/execution_finished", DesignatorExecutionFinished)
+desig_resolution_start = create_publisher("/knowrob/designator/resolving_started", DesignatorResolutionStart)
+desig_resolution_finished = create_publisher("/knowrob/designator/resolving_finished", DesignatorResolutionFinished)
+desig_init = create_publisher("/knowrob/designator/init", DesignatorInit)
+object_desig = create_publisher("/knowrob/designator/push_object_designator", PushObjectDesignator)
 
-query_client = create_action_client("knowrob/designator_query_incremental", DesignatorQueryIncrementalAction)
+query_client = create_action_client("/knowrob/designator/query_incremental", DesignatorQueryIncrementalAction)
 
 query_results = {"PyCRAP.Milk": "fridge_main", "PyCRAP.Spoon": "cabinet10_drawer_top", "PyCRAP.Bowl": "island_countertop"}
 
