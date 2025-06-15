@@ -11,23 +11,19 @@ from ..ros import create_publisher, create_action_client
 from ..ros import Time as ROSTime
 
 try:
-    from knowrob_designator.msg import DesignatorExecutionFinished, DesignatorExecutionStart, DesignatorInit, DesignatorResolutionFinished, DesignatorResolutionStart, PushObjectDesignator
-    from knowrob_designator.action import DesignatorQueryIncremental_SendGoal_Request, DesignatorQueryIncremental
+    from knowrob_designator.msg import DesignatorExecutionFinished, DesignatorExecutionStart, DesignatorInit, DesignatorResolutionFinished, DesignatorResolutionStart, PushObjectDesignator, DesignatorQueryIncrementalAction, DesignatorQueryIncrementalGoal, DesignatorQueryIncrementalResult
 except ImportError:
     loginfo("Could not import knowrob_designator.msg")
 
-desig_execution_start = create_publisher("knowrob/designator_execution_started", DesignatorExecutionStart)
-desig_execution_finished = create_publisher("knowrob/designator_execution_finished", DesignatorExecutionFinished)
-desig_resolution_start = create_publisher("knowrob/designator_resolving_started", DesignatorResolutionStart)
-desig_resolution_finished = create_publisher("knowrob/designator_resolving_finished", DesignatorResolutionFinished)
-desig_init = create_publisher("/knowrob/designator/push_object_designator", DesignatorInit)
-object_desig = create_publisher("knowrob/object_designator", PushObjectDesignator)
+desig_execution_start = create_publisher("/knowrob/designator/execution_start", DesignatorExecutionStart)
+desig_execution_finished = create_publisher("/knowrob/designator/execution_finished", DesignatorExecutionFinished)
+desig_resolution_start = create_publisher("/knowrob/designator/resolving_started", DesignatorResolutionStart)
+desig_resolution_finished = create_publisher("/knowrob/designator/resolving_finished", DesignatorResolutionFinished)
+desig_init = create_publisher("/knowrob/designator/init", DesignatorInit)
+object_desig = create_publisher("/knowrob/designator/push_object_designator", PushObjectDesignator)
 
-try:
-    query_client = create_action_client("knowrob/designator_query_incremental", DesignatorQueryIncremental)
-except Exception as e:
-    loginfo(f"Could not create action client for knowrob/designator_query_incremental: {e}")
-    query_client = None
+query_client = create_action_client("/knowrob/designator/query_incremental", DesignatorQueryIncrementalAction)
+
 query_results = {"PyCRAP.Milk": "fridge_main", "PyCRAP.Spoon": "cabinet10_drawer_top", "PyCRAP.Bowl": "island_countertop"}
 
 @lru_cache(maxsize=None)
@@ -202,7 +198,7 @@ def query_for_object_storage(obj_type: Type[PhysicalObject]):
     :return: The link where the object is stored.
     """
 
-    msg = DesignatorQueryIncremental.Goal()
+    msg = DesignatorQueryIncrementalGoal()
     msg.query_type = "check"
     msg.query_id = "1"
     desig_json = "{'anAction': {'type': 'searching', 'anObject': {'type': 'OBJ_TYPE'}, 'aLocation': {'?x': {'insideOf': {'anObject': {'URDFLink': '?_'}}}}}}".replace("OBJ_TYPE", str(obj_type))
@@ -219,7 +215,7 @@ def query_for_object_storage(obj_type: Type[PhysicalObject]):
 
 
 
-def mock_action_server(msg: DesignatorQueryIncremental.Goal):
+def mock_action_server(msg: DesignatorQueryIncrementalGoal):
     """
     Mock action server for the DesignatorQueryIncremental action. It simulates the behavior of the action server by
     returning a result immediately.
@@ -227,7 +223,7 @@ def mock_action_server(msg: DesignatorQueryIncremental.Goal):
     :param msg: The message received from the action client.
     :return: The result of the action.
     """
-    result = DesignatorQueryIncremental.Result()
+    result = DesignatorQueryIncrementalResult()
     result.success = True
     result.query_id = msg.query_id
     result_string = '{"?x" : {"aLocation" : {"insideOf" : { "anObject" : {"URDFLink" : "?_"}}}}}'
