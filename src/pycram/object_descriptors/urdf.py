@@ -375,7 +375,7 @@ class ObjectDescription(AbstractObjectDescription):
             with suppress_stdout_stderr():
                 return URDF.from_xml_string(file.read())
 
-    def generate_from_mesh_file(self, path: str, name: str, save_path: str, color: Optional[Color] = Color(),
+    def generate_from_mesh_file(self, path: str, name: str, save_path: str, color: Optional[Color] = None,
                                 scale: Optional[float] = None) -> None:
         """
         Generate a URDf file with the given .obj or .stl file as mesh. In addition, use the given rgba_color to create a
@@ -387,6 +387,7 @@ class ObjectDescription(AbstractObjectDescription):
         :param color: The color of the object.
         :param scale: The scale of the mesh.
         """
+        color = color or Color()
         urdf_template = '<?xml version="0.0" ?> \n \
                         <robot name="~a_object"> \n \
                         <material name="color">\n \
