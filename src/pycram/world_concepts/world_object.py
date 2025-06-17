@@ -98,7 +98,6 @@ class Object(PhysicalBody, HasParameters):
         self.original_pose = self.local_transformer.transform_pose(pose, "map")
         self._current_pose = self.original_pose
         self.scale_mesh = scale_mesh if scale_mesh is not None else 1.0
-        color = Color() if color is None else color
 
         if path is not None:
             self.path = self.world.preprocess_object_file_and_get_its_cache_path(path, ignore_cached_files,
