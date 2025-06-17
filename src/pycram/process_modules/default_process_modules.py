@@ -270,20 +270,21 @@ class DefaultClose(ProcessModule):
     def create_robot_goal_pose(self, init_pose: PoseStamped, goal_pose: PoseStamped) -> PoseStamped:
         """
         creates the transform from the initial pose to the goal pose of the robot and returns it as PoseStamped.
-        :param init_pose:
-        :param goal_pose:
+        :param init_pose: init handle pose
+        :param goal_pose: goal handle pose
         :return:
         """
         init_transform = init_pose.to_transform_stamped("handle")
-        goal_transform = goal_pose.to_transform_stamped("handle")
-
-        transform = ~init_transform * goal_transform
-
         robot_pose = World.robot.pose
         robot_transform = robot_pose.to_transform_stamped(World.robot.tf_frame)
-        robot_goal_transform = robot_transform * transform
-        robot_goal_pose = robot_goal_transform.to_pose_stamped()
-        return robot_goal_pose
+
+        init_to_robot = ~init_transform * robot_transform
+
+        goal_transform = goal_pose.to_transform_stamped("handle")
+        goal_robot_transform = goal_transform * init_to_robot
+        goal_robot_pose = goal_robot_transform.to_pose_stamped()
+
+        return goal_robot_pose
 
 
 class DefaultMoveTCPWaypoints(ProcessModule):
