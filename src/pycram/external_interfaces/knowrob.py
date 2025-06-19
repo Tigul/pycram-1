@@ -1,7 +1,9 @@
 import json
+import time
 from datetime import datetime
 from functools import lru_cache
 
+from ..datastructures.dataclasses import Color
 from ..designators.action_designator import *
 from ..designators.object_designator import *
 from ..designator import ObjectDesignatorDescription
@@ -25,6 +27,7 @@ object_desig = create_publisher("/knowrob/designator/push_object_designator", Pu
 query_client = create_action_client("/knowrob/designator/query_incremental", DesignatorQueryIncrementalAction)
 
 query_results = {"PyCRAP.Milk": "fridge_main", "PyCRAP.Spoon": "cabinet10_drawer_top", "PyCRAP.Bowl": "island_countertop"}
+highlight_links = {"fridge_main": "fridge_area"}
 
 @lru_cache(maxsize=None)
 def init_object_state():
@@ -60,7 +63,9 @@ def object_to_json(obj: Union[ObjectDesignatorDescription, Object]) -> Dict[str,
     :param obj: The object or object designator to convert.
     :return: A dictionary representation of the object.
     """
-    if isinstance(obj, ObjectDesignatorDescription):
+    if isinstance(obj, ObjectPart):
+        return {"anObject": {"name": obj.names, "part_of": obj.part_of.name}}
+    elif isinstance(obj, ObjectDesignatorDescription):
         return {"anObject": {"type": str(obj.types[0])}}
     else:
         return {"anObject": {"type": str(obj.obj_type)}}
@@ -209,11 +214,23 @@ def query_for_object_storage(obj_type: Type[PhysicalObject]):
     if result.success:
         result_json = json.loads(result.binding_as_json)
         result_link = result_json["?x"]["aLocation"]["insideOf"]["anObject"]["URDFLink"]
+        highlight_link(result_link)
         return result_link
     else:
         loginfo("Query failed")
 
+def highlight_link(link_name: str):
+    link_to_highlight = highlight_links.get(link_name, None)
+    containing_obj = None
+    for obj in World.current_world.objects:
+        if link_to_highlight in obj.links:
+            containing_obj = obj
+            break
 
+    prev_color = containing_obj.links[link_to_highlight].color
+    containing_obj.links[link_to_highlight].color = Color(1, 0, 0, 1)  # Highlight the link in red
+    time.sleep(1.5)
+    containing_obj.links[link_to_highlight].color = prev_color
 
 def mock_action_server(msg: DesignatorQueryIncrementalGoal):
     """

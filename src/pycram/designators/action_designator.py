@@ -4,6 +4,7 @@ from __future__ import annotations
 import abc
 import inspect
 import math
+import time
 from dataclasses import dataclass, field
 from datetime import timedelta
 from functools import cached_property
@@ -18,7 +19,7 @@ from ..language import SequentialPlan, TryInOrderPlan
 from ..plan import with_plan
 
 from ..datastructures.partial_designator import PartialDesignator
-from ..datastructures.dataclasses import FrozenObject
+from ..datastructures.dataclasses import FrozenObject, Color
 
 from .. import utils
 from ..tf_transformations import quaternion_from_euler
@@ -1162,6 +1163,11 @@ class SearchAction(ActionDescription):
                 links_below = contained_body.get_links_below()
                 for link in links_below:
                     if "handle" in link.name:
+                        prev_color = link.color
+                        link.color = Color(1, 0 ,0, 1)
+                        time.sleep(1)
+                        link.color = prev_color
+
                         SequentialPlan(
                             NavigateActionDescription(CostmapLocation(link, reachable_for=World.robot, reachable_arm=Arms.LEFT)),
                             OpenActionDescription(link, Arms.LEFT),
