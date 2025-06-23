@@ -599,9 +599,9 @@ class BoundingBox:
         2. x is depth, representing the long side of the object
         3. y is width, representing the remaining dimension
         """
-        if self.width > self.depth:
-            logwarn_once("The width of the bounding box is greater than the depth. This means the object's"
-                         "axis alignment is potentially going against IAI conventions.")
+        # if self.width > self.depth:
+        #     logwarn_once("The width of the bounding box is greater than the depth. This means the object's"
+        #                  "axis alignment is potentially going against IAI conventions.")
         return [self.depth, self.width, self.height]
 
     @staticmethod

@@ -253,7 +253,7 @@ class SequentialNode(LanguageNode):
         :return: The state and list of results according to the behaviour described in :func:`Sequential`
         """
         try:
-            loginfo(f"Executing {self}")
+            # loginfo(f"Executing {self}")
             self.perform_sequential(self.children)
             self.status = TaskStatus.SUCCEEDED
         except PlanFailure as e:

@@ -221,7 +221,7 @@ class Costmap:
             new_map = (new_map / np.max(new_map)).reshape((self.height, self.width))
         else:
             new_map = new_map.reshape((self.height, self.width))
-            logwarn("Merged costmap is empty.")
+            # logwarn("Merged costmap is empty.")
         return Costmap(self.resolution, self.height, self.width, self.origin, new_map)
 
     def __add__(self, other: Costmap) -> Costmap:
