@@ -335,6 +335,15 @@ class Pose(HasParameters):
         return cls(Vector3(position[0], position[1], position[2]),
                    Quaternion(orientation[0], orientation[1], orientation[2], orientation[3]))
 
+    def to_matrix(self) -> np.ndarray:
+        """
+        Converts the pose to a 4x4 transformation matrix.
+
+        :return: A numpy array representing the transformation matrix.
+        """
+        translation = translation_matrix(self.position.to_list())
+        rotation = quaternion_matrix(self.orientation.to_list())
+        return np.dot(translation, rotation)
 
 @dataclass
 class Header:
@@ -513,6 +522,26 @@ class PoseStamped(HasParameters):
         """
         return [self.pose.to_list(), self.frame_id]
 
+    def to_matrix(self) -> np.ndarray:
+        """
+        Converts the pose to a 4x4 transformation matrix.
+
+        :return: A numpy array representing the transformation matrix.
+        """
+        return self.pose.to_matrix()
+
+    @classmethod
+    def from_matrix(cls, matrix: np.ndarray, frame: str = "map") -> Self:
+        """
+        Create a PoseStamped from a 4x4 transformation matrix.
+
+        :param matrix: A 4x4 transformation matrix as numpy array.
+        :param frame: Frame in which the pose is defined.
+        :return: A PoseStamped object created from the matrix.
+        """
+        pose = Pose.from_matrix(matrix)
+        return cls(pose=pose, header=Header(frame_id=frame, stamp=datetime.datetime.now()))
+
     @staticmethod
     def calculate_closest_faces(pose_to_robot_vector: Vector3,
                                 specified_grasp_axis: AxisIdentifier = AxisIdentifier.Undefined) \
@@ -678,16 +707,6 @@ class Transform(Pose):
     @property
     def rotation(self):
         return self.orientation
-
-    def to_matrix(self) -> np.ndarray:
-        """
-        Converts the transform to a 4x4 transformation matrix.
-
-        :return: A numpy array representing the transformation matrix.
-        """
-        translation = translation_matrix(self.translation.to_list())
-        rotation = quaternion_matrix(self.rotation.to_list())
-        return np.dot(translation, rotation)
 
     def __invert__(self) -> Transform:
         """
