@@ -273,6 +273,16 @@ class Pose(HasParameters):
         """
         return [self.position.to_list(), self.orientation.to_list()]
 
+    def to_matrix(self) -> np.ndarray:
+        """
+        Converts the transform to a 4x4 transformation matrix.
+
+        :return: A numpy array representing the transformation matrix.
+        """
+        translation = translation_matrix(self.position.to_list())
+        rotation = quaternion_matrix(self.orientation.to_list())
+        return np.dot(translation, rotation)
+
     def copy(self) -> Self:
         """
         Create a deep copy of the pose.
@@ -477,6 +487,18 @@ class PoseStamped(HasParameters):
         return cls(pose=Pose.from_list(position, orientation),
                    header=Header(frame_id=frame, stamp=datetime.datetime.now()))
 
+    @classmethod
+    def from_matrix(cls, matrix: np.ndarray, frame_id: Optional[str] = "map") -> Self:
+        """
+        Create a PoseStamped from a 4x4 transformation matrix.
+
+        :param matrix: A 4x4 transformation matrix as numpy array.
+        :param frame: Frame in which the pose is defined.
+        :return: A PoseStamped object created from the matrix.
+        """
+        pose = Pose.from_matrix(matrix)
+        return cls(pose=pose, header=Header(frame_id=frame, stamp=datetime.datetime.now()))
+
     def to_transform_stamped(self, child_link_id: str) -> TransformStamped:
         """
         Converts the PoseStamped to a TransformStamped given a frame to which the transform is pointing.
@@ -487,6 +509,14 @@ class PoseStamped(HasParameters):
         return TransformStamped(header=self.header,
                                 pose=Transform.from_list(self.position.to_list(), self.orientation.to_list()),
                                 child_frame_id=child_link_id)
+
+    def to_matrix(self) -> np.ndarray:
+        """
+        Converts the pose to a 4x4 transformation matrix.
+
+        :return: A numpy array representing the transformation matrix.
+        """
+        return self.pose.to_matrix()
 
     def round(self, decimals: int = 4):
         """
@@ -678,16 +708,6 @@ class Transform(Pose):
     @property
     def rotation(self):
         return self.orientation
-
-    def to_matrix(self) -> np.ndarray:
-        """
-        Converts the transform to a 4x4 transformation matrix.
-
-        :return: A numpy array representing the transformation matrix.
-        """
-        translation = translation_matrix(self.translation.to_list())
-        rotation = quaternion_matrix(self.rotation.to_list())
-        return np.dot(translation, rotation)
 
     def __invert__(self) -> Transform:
         """
