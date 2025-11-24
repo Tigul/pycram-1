@@ -108,7 +108,7 @@ class Parameterizer:
 
             kwargs = {key: getattr(resolved, key) for key in resolved._parameters}
             plan.add_edge(plan.root,
-                          ResolvedActionNode(designator_ref=resolved, kwargs=kwargs, action=resolved.__class__))
+                          ResolvedActionNode(designator_ref=resolved, kwargs=kwargs, designator_type=resolved.__class__))
 
         return plan
 
